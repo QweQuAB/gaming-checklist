@@ -1,0 +1,97 @@
+{
+  "name": "Q's Gaming Checklist",
+  "short_name": "GameList",
+  "description": "Track your gaming backlog and progress with ease",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1e1b4b",
+  "theme_color": "#7c3aed",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "en-US",
+  "dir": "ltr",
+  
+  "icons": [
+    {
+      "src": "/assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  
+  "categories": [
+    "games",
+    "entertainment",
+    "productivity",
+    "lifestyle"
+  ],
+  
+  "screenshots": [
+    {
+      "src": "/assets/screenshot1.png",
+      "sizes": "540x720",
+      "type": "image/png",
+      "label": "Main game list view"
+    }
+  ],
+  
+  "shortcuts": [
+    {
+      "name": "Add Game",
+      "short_name": "Add",
+      "description": "Quickly add a new game",
+      "url": "/?action=add",
+      "icons": [
+        {
+          "src": "/assets/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Playing",
+      "short_name": "Playing",
+      "description": "View games you're currently playing",
+      "url": "/?filter=playing",
+      "icons": [
+        {
+          "src": "/assets/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ],
+  
+  "share_target": {
+    "action": "/share",
+    "method": "GET",
+    "enctype": "application/x-www-form-urlencoded",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  },
+  
+  "prefer_related_applications": false,
+  
+  "related_applications": [],
+  
+  "iarc_rating_id": "",
+  
+  "features": [
+    "cross-platform",
+    "offline",
+    "installable",
+    "lightweight"
+  ]
+}
