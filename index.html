@@ -249,23 +249,37 @@
 
     function set(k,v){sf(function(p){var n=Object.assign({},p);n[k]=v;return n;});}
 
+    function getRawgKey(){return localStorage.getItem('rawgApiKey')||'';}
+
     function doSearch(){
       if(!f.name||f.name.length<2){return;}
+      var key=getRawgKey();
+      if(!key){
+        var k=prompt('RAWG API Key needed for game search.\n\nGet your FREE key:\n1. Go to rawg.io/apidocs\n2. Sign up (free, takes 1 min)\n3. Copy your API key and paste it below:');
+        if(!k||!k.trim()){return;}
+        localStorage.setItem('rawgApiKey',k.trim());
+        key=k.trim();
+      }
       setSearching(true);setResults([]);
-      fetch('https://api.rawg.io/api/games?search='+encodeURIComponent(f.name)+'&page_size=5')
-        .then(function(r){return r.json();})
+      fetch('https://api.rawg.io/api/games?search='+encodeURIComponent(f.name)+'&page_size=6&key='+key)
+        .then(function(r){
+          if(r.status===401||r.status===403){localStorage.removeItem('rawgApiKey');throw new Error('Invalid API key — please try again.');}
+          return r.json();
+        })
         .then(function(d){
-          setResults((d.results||[]).map(function(g){
+          var list=(d.results||[]).map(function(g){
             return {id:g.id,name:g.name,released:g.released,rating:g.rating,image:g.background_image,genres:(g.genres||[]).map(function(x){return x.name;}).join(', ')};
-          }));
+          });
+          setResults(list.length?list:[{id:'none',name:'No results found — try a different search.',noResult:true}]);
           setSearching(false);
         })
-        .catch(function(){alert('Search failed.');setSearching(false);});
+        .catch(function(e){alert(e.message||'Search failed. Check internet connection.');setSearching(false);});
     }
 
     function selectGame(id){
       setSearching(true);setResults([]);
-      fetch('https://api.rawg.io/api/games/'+id)
+      var key=getRawgKey();
+      fetch('https://api.rawg.io/api/games/'+id+'?key='+key)
         .then(function(r){return r.json();})
         .then(function(g){
           var yr=g.released?parseInt(g.released):2020;
