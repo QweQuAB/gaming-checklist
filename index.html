@@ -5,35 +5,334 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="description" content="Track your gaming backlog and progress">
   <meta name="theme-color" content="#7c3aed">
-  
-  <!-- iOS Support -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="GameList">
-  
-  <!-- PWA Manifest -->
   <link rel="manifest" href="manifest.json">
-  
   <title>Q's Gaming Checklist</title>
-  
-  <!-- External Libraries -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+/*
+  ============================================
+  GAMING CHECKLIST - STYLES
+  ============================================
   
-  <!-- Your Custom Styles -->
-  <link rel="stylesheet" href="css/styles.css">
+  This file contains ALL visual styling.
+  
+  SECTIONS:
+  1. Base Styles (resets, fonts)
+  2. Loading Screen
+  3. Install Prompt
+  4. Animations
+  5. Utility Classes
+  
+  ============================================
+*/
+
+/* ==================== 1. BASE STYLES ==================== */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 
+               Oxygen, Ubuntu, Cantarell, sans-serif;
+  overflow-x: hidden;
+  touch-action: pan-y;
+  background: #1e1b4b;
+}
+
+/* Prevent pull-to-refresh on mobile */
+body {
+  overscroll-behavior-y: contain;
+}
+
+
+/* ==================== 2. LOADING SCREEN ==================== */
+
+.loading-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  color: white;
+}
+
+.loading-screen.hide {
+  animation: fadeOut 0.5s forwards;
+}
+
+.loading-screen h2 {
+  font-size: 24px;
+  margin-bottom: 8px;
+  font-weight: bold;
+}
+
+.loading-screen p {
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.loader {
+  width: 50px;
+  height: 50px;
+  border: 5px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+
+/* ==================== 3. INSTALL PROMPT ==================== */
+
+.install-prompt {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  right: 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 16px;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+  display: none;
+  z-index: 9999;
+  animation: slideUp 0.3s ease;
+}
+
+.install-prompt.show {
+  display: block;
+}
+
+.install-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.install-icon {
+  font-size: 32px;
+}
+
+.install-text h3 {
+  font-size: 16px;
+  margin-bottom: 4px;
+  font-weight: bold;
+}
+
+.install-text p {
+  font-size: 13px;
+  opacity: 0.9;
+}
+
+.install-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.install-buttons button {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+#installBtn {
+  background: white;
+  color: #764ba2;
+}
+
+#dismissBtn {
+  background: rgba(255,255,255,0.2);
+  color: white;
+}
+
+
+/* ==================== 4. ANIMATIONS ==================== */
+
+@keyframes spin {
+  to { 
+    transform: rotate(360deg); 
+  }
+}
+
+@keyframes fadeOut {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+
+/* ==================== 5. UTILITY CLASSES ==================== */
+
+.fade-in {
+  animation: fadeIn 0.3s ease;
+}
+
+.scale-in {
+  animation: scaleIn 0.3s ease;
+}
+
+/* Smooth transitions */
+.smooth-transition {
+  transition: all 0.3s ease;
+}
+
+/* Active state for touch devices */
+.touchable:active {
+  opacity: 0.7;
+  transform: scale(0.98);
+}
+
+/* No select (prevent text selection on buttons) */
+.no-select {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Scrollbar styling (for webkit browsers) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0,0,0,0.1);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(124, 58, 237, 0.5);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(124, 58, 237, 0.7);
+}
+
+
+/* ==================== RESPONSIVE DESIGN ==================== */
+
+/* Mobile-first approach (default styles are for mobile) */
+
+/* Tablet (768px and up) */
+@media (min-width: 768px) {
+  .install-prompt {
+    max-width: 400px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+}
+
+/* Desktop (1024px and up) */
+@media (min-width: 1024px) {
+  body {
+    overflow-y: scroll; /* Always show scrollbar to prevent jump */
+  }
+}
+
+
+/* ==================== DARK MODE OVERRIDES ==================== */
+
+/* These are applied when dark mode is active in the app */
+.dark-mode {
+  /* Dark mode styles are handled in Tailwind classes */
+  /* But you can add custom overrides here if needed */
+}
+
+
+/*
+  ============================================
+  HOW TO MODIFY THIS FILE:
+  ============================================
+  
+  CHANGE COLORS:
+  - Main gradient: Search for "667eea" and "764ba2"
+  - Replace with your colors
+  
+  CHANGE ANIMATIONS:
+  - Loading spinner speed: Change "1s" in @keyframes spin
+  - Fade speed: Change "0.5s" in fadeOut
+  
+  ADD NEW STYLES:
+  - Add them in a new section at the bottom
+  - Use descriptive class names
+  - Add comments explaining what they do
+  
+  REMOVE FEATURES:
+  - Comment out or delete the section you don't need
+  - Example: Remove install prompt styles if not using
+  
+  ============================================
+  WHAT NOT TO CHANGE:
+  ============================================
+  
+  - Don't remove * (reset) styles
+  - Don't remove animations (app uses them)
+  - Keep base body styles
+  
+  ============================================
+*/  </style>
 </head>
 <body>
-  <!-- Loading Screen -->
   <div class="loading-screen" id="loadingScreen">
     <div class="loader"></div>
     <h2>🎮 Gaming Checklist</h2>
     <p>Loading your games...</p>
   </div>
-  
-  <!-- Install Prompt -->
   <div class="install-prompt" id="installPrompt">
     <div class="install-content">
       <div class="install-icon">🎮</div>
@@ -47,92 +346,3328 @@
       <button id="dismissBtn">Later</button>
     </div>
   </div>
-  
-  <!-- React App Root -->
   <div id="root"></div>
+
+  <script type="text/babel">
+<!-- COMBINED JS -->
+/*
+  ============================================
+  CONFIGURATION FILE
+  ============================================
   
-  <!-- 
-    ============================================
-    LOAD ORDER IS IMPORTANT!
-    ============================================
-    1. Config (settings)
-    2. Data (game list)
-    3. Storage (save/load)
-    4. Icons (SVG components)
-    5. UI Components (reusable pieces)
-    6. Game Card (individual game display)
-    7. Features (search, filter, etc.)
-    8. App (main logic - brings it all together)
-    ============================================
-  -->
+  This file contains all app settings and constants.
+  Change values here to customize the app behavior.
   
-  <!-- 1. Configuration & Settings -->
-  <script type="text/babel" src="js/config.js"></script>
+  ============================================
+*/
+
+const CONFIG = {
   
-  <!-- 2. Game Data -->
-  <script type="text/babel" src="js/data.js"></script>
+  // ==================== APP INFO ====================
+  APP_NAME: "Q's Gaming Checklist",
+  APP_VERSION: "1.0.0",
+  APP_AUTHOR: "Q",
   
-  <!-- 3. Storage Manager -->
-  <script type="text/babel" src="js/storage.js"></script>
   
-  <!-- 4. Icon Components -->
-  <script type="text/babel" src="js/icons.js"></script>
+  // ==================== STORAGE KEYS ====================
+  STORAGE: {
+    GAMES_KEY: 'gameChecklistData',      // Where games are saved in localStorage
+    DARK_MODE_KEY: 'darkMode',           // Dark mode preference
+    INSTALL_DISMISSED_KEY: 'installPromptDismissed',  // Install prompt status
+    USER_SETTINGS_KEY: 'userSettings'    // User preferences
+  },
   
-  <!-- 5. Reusable UI Components -->
-  <script type="text/babel" src="js/ui-components.js"></script>
   
-  <!-- 6. Game Card Component -->
-  <script type="text/babel" src="js/game-card.js"></script>
+  // ==================== GAME STATUS ====================
+  STATUS: {
+    NOT_DOWNLOADED: 'not_downloaded',
+    DOWNLOADED: 'downloaded',
+    PLAYING: 'playing',
+    COMPLETED: 'completed',
+    FAVORITE: 'favorite'
+  },
   
-  <!-- 7. Features (Search, Filter, Sort) -->
-  <script type="text/babel" src="js/features.js"></script>
+  // Status cycle order (what happens when you click the status icon)
+  STATUS_CYCLE: [
+    'not_downloaded',
+    'downloaded', 
+    'playing',
+    'completed',
+    'favorite'
+  ],
   
-  <!-- 8. Game Search (Auto-fill) -->
-  <script type="text/babel" src="js/game-search.js"></script>
   
-  <!-- 9. Main App Logic -->
-  <script type="text/babel" src="js/app.js"></script>
+  // ==================== GAME TIERS ====================
+  TIERS: {
+    S: { 
+      label: 'MUST PLAY', 
+      color: 'bg-red-500',
+      description: 'Essential games you must play'
+    },
+    A: { 
+      label: 'EXCELLENT', 
+      color: 'bg-orange-500',
+      description: 'Outstanding games highly recommended'
+    },
+    B: { 
+      label: 'WORTH IT', 
+      color: 'bg-yellow-500',
+      description: 'Good games worth your time'
+    },
+    C: { 
+      label: 'CLASSICS', 
+      color: 'bg-green-500',
+      description: 'Older but still enjoyable games'
+    },
+    R: { 
+      label: 'RACING', 
+      color: 'bg-blue-500',
+      description: 'Racing games'
+    }
+  },
   
-  <!-- PWA Registration & Install Prompt -->
-  <!-- Deferred so APP_CONFIG is available from Babel scripts -->
-  <script>
-    window.addEventListener('load', function() {
-      // Fallback: hide loading screen after 4s even if React fails
-      setTimeout(function() {
-        var ls = document.getElementById('loadingScreen');
-        if (ls) ls.classList.add('hide');
-      }, 4000);
+  
+  // ==================== UI SETTINGS ====================
+  UI: {
+    // Install prompt delay (milliseconds)
+    INSTALL_PROMPT_DELAY: 3000,  // Show after 3 seconds
+    
+    // Don't show install prompt again for X days
+    INSTALL_PROMPT_COOLDOWN: 7,  // 7 days
+    
+    // Loading screen minimum display time (milliseconds)
+    LOADING_MIN_TIME: 1500,  // 1.5 seconds
+    
+    // Animation durations
+    FADE_DURATION: 300,      // 0.3 seconds
+    SLIDE_DURATION: 300,     // 0.3 seconds
+    
+    // Max games to show before requiring search
+    MAX_GAMES_WITHOUT_SEARCH: 1000,
+  },
+  
+  
+  // ==================== THEME COLORS ====================
+  THEME: {
+    LIGHT: {
+      primary: '#7c3aed',       // Purple
+      secondary: '#ec4899',     // Pink
+      background: '#ffffff',
+      text: '#1f2937',
+      accent: '#10b981'
+    },
+    DARK: {
+      primary: '#a78bfa',       // Light purple
+      secondary: '#f472b6',     // Light pink  
+      background: '#1f2937',
+      text: '#f9fafb',
+      accent: '#34d399'
+    }
+  },
+  
+  
+  // ==================== EXTERNAL LINKS ====================
+  LINKS: {
+    // YouTube search for trailers
+    YOUTUBE_SEARCH: 'https://www.youtube.com/results?search_query=',
+    
+    // Gameranx "Before You Buy" search
+    GAMERANX_SEARCH: 'https://www.youtube.com/results?search_query=gameranx+{GAME}+before+you+buy',
+    
+    // How Long To Beat (for game length)
+    HLTB: 'https://howlongtobeat.com/?q=',
+    
+    // Steam store
+    STEAM: 'https://store.steampowered.com/search/?term=',
+  },
+  
+  
+  // ==================== FEATURES ====================
+  FEATURES: {
+    // Enable/disable features
+    ENABLE_DARK_MODE: true,
+    ENABLE_SEARCH: true,
+    ENABLE_FILTERS: true,
+    ENABLE_SORTING: true,
+    ENABLE_RATINGS: true,
+    ENABLE_NOTES: true,
+    ENABLE_EXPORT: true,
+    ENABLE_IMPORT: true,
+    ENABLE_ADD_GAME: true,
+    ENABLE_DELETE_GAME: true,
+    ENABLE_TRAILERS: true,
+    ENABLE_GAMERANX: true,
+    
+    // Online features (require internet)
+    ENABLE_ONLINE_FEATURES: true,
+  },
+  
+  
+  // ==================== VALIDATION ====================
+  VALIDATION: {
+    // Max lengths for user input
+    MAX_GAME_NAME_LENGTH: 100,
+    MAX_GENRE_LENGTH: 50,
+    MAX_NOTES_LENGTH: 1000,
+    MAX_DESC_LENGTH: 500,
+    
+    // Min lengths
+    MIN_GAME_NAME_LENGTH: 1,
+    
+    // Allowed file types for import
+    ALLOWED_IMPORT_TYPES: ['.json'],
+    
+    // Max file size for import (bytes)
+    MAX_IMPORT_SIZE: 5 * 1024 * 1024,  // 5MB
+  },
+  
+  
+  // ==================== DEFAULTS ====================
+  DEFAULTS: {
+    // Default values for new games
+    NEW_GAME: {
+      tier: 'C',
+      priority: 'MEDIUM',
+      status: 'not_downloaded',
+      icon: '🎮',
+      rating: 0,
+      notes: ''
+    },
+    
+    // Default sort option
+    SORT_BY: 'tier',
+    
+    // Default filter
+    FILTER: 'all',
+    
+    // Default dark mode
+    DARK_MODE: false,
+  },
+  
+  
+  // ==================== PWA SETTINGS ====================
+  PWA: {
+    // Service worker cache name
+    CACHE_NAME: 'gaming-checklist-v1',
+    
+    // Update check interval (milliseconds)
+    UPDATE_CHECK_INTERVAL: 3600000,  // 1 hour
+    
+    // Offline message
+    OFFLINE_MESSAGE: "You're offline - Changes will sync when back online",
+  },
+  
+};
+
+// Make CONFIG available globally
+window.APP_CONFIG = CONFIG;
+
+/*
+  ============================================
+  HOW TO USE THIS FILE:
+  ============================================
+  
+  Access settings anywhere in your code:
+  
+  Example 1: Get app name
+  const appName = APP_CONFIG.APP_NAME;
+  
+  Example 2: Get storage key
+  const gamesKey = APP_CONFIG.STORAGE.GAMES_KEY;
+  
+  Example 3: Check if feature is enabled
+  if (APP_CONFIG.FEATURES.ENABLE_DARK_MODE) {
+    // Show dark mode toggle
+  }
+  
+  Example 4: Get theme color
+  const bgColor = APP_CONFIG.THEME.LIGHT.background;
+  
+  ============================================
+  CUSTOMIZATION GUIDE:
+  ============================================
+  
+  CHANGE APP NAME:
+  - Edit APP_NAME value
+  
+  DISABLE A FEATURE:
+  - Set FEATURES.ENABLE_XXX to false
+  - Example: ENABLE_RATINGS: false
+  
+  CHANGE COLORS:
+  - Edit THEME.LIGHT or THEME.DARK values
+  - Use hex color codes (#rrggbb)
+  
+  CHANGE TIERS:
+  - Edit TIERS object
+  - Add new tiers or modify existing ones
+  
+  ADD NEW SETTING:
+  - Add it to the appropriate section
+  - Use UPPERCASE_WITH_UNDERSCORES for keys
+  - Add comment explaining what it does
+  
+  ============================================
+  IMPORTANT NOTES:
+  ============================================
+  
+  - Don't delete existing keys (other files depend on them)
+  - Always test after making changes
+  - Keep values in correct format (strings, numbers, booleans)
+  - Add comments for any new settings you add
+  
+  ============================================
+*/
+/*
+  ============================================
+  GAME DATA FILE
+  ============================================
+  
+  This file contains ALL your games.
+  
+  TO ADD A NEW GAME:
+  1. Copy an existing game object
+  2. Change the values
+  3. Make sure id is unique
+  4. Add to the appropriate tier section
+  
+  TO REMOVE A GAME:
+  1. Delete or comment out the game object
+  
+  ============================================
+*/
+
+const INITIAL_GAMES = [
+  
+  // ==================== TIER S - MUST PLAY ====================
+  {
+    id: 1,
+    name: "Batman: Arkham City",
+    genre: "Action-Adventure",
+    fps: "45-60",
+    tier: "S",
+    priority: "HIGH",
+    trailer: "https://www.youtube.com/watch?v=9pnK8akbd2M",
+    desc: "Become the Dark Knight in an open-world Gotham prison.",
+    hours: "12-15",
+    icon: "🦇"
+  },
+  {
+    id: 2,
+    name: "Deus Ex: Human Revolution",
+    genre: "RPG/Stealth",
+    fps: "50-60",
+    tier: "S",
+    priority: "HIGH",
+    trailer: "https://www.youtube.com/watch?v=Kq5KWLqUewc",
+    desc: "Cyberpunk RPG where your choices matter.",
+    hours: "20-25",
+    icon: "🤖"
+  },
+  {
+    id: 3,
+    name: "The Witcher 2",
+    genre: "Fantasy RPG",
+    fps: "40-50",
+    tier: "S",
+    priority: "HIGH",
+    trailer: "https://www.youtube.com/watch?v=YJ_KFwNLpl0",
+    desc: "Hunt monsters as Geralt in this dark fantasy.",
+    hours: "25-30",
+    icon: "⚔️"
+  },
+  {
+    id: 4,
+    name: "Spec Ops: The Line",
+    genre: "Third-Person Shooter",
+    fps: "50-60",
+    tier: "S",
+    priority: "HIGH",
+    trailer: "https://www.youtube.com/watch?v=3uUsdBfG6o0",
+    desc: "Military shooter exploring war's psychological horrors.",
+    hours: "6-8",
+    icon: "🎖️"
+  },
+  {
+    id: 5,
+    name: "Metro: Last Light Redux",
+    genre: "FPS/Horror",
+    fps: "35-45",
+    tier: "S",
+    priority: "HIGH",
+    trailer: "https://www.youtube.com/watch?v=8jcIYP8LpxA",
+    desc: "Survive post-apocalyptic Moscow metro tunnels.",
+    hours: "10-12",
+    icon: "🚇"
+  },
+  {
+    id: 6,
+    name: "Dishonored",
+    genre: "Stealth/Action",
+    fps: "50-60",
+    tier: "S",
+    priority: "HIGH",
+    trailer: "https://www.youtube.com/watch?v=E1HlYTukh9A",
+    desc: "Supernatural assassin with choice-based gameplay.",
+    hours: "12-15",
+    icon: "🗡️"
+  },
+  {
+    id: 7,
+    name: "Tomb Raider (2013)",
+    genre: "Action-Adventure",
+    fps: "45-55",
+    tier: "S",
+    priority: "HIGH",
+    trailer: "https://www.youtube.com/watch?v=xCe8-1dbXZc",
+    desc: "Lara Croft's origin story on a dangerous island.",
+    hours: "11-14",
+    icon: "🏹"
+  },
+  {
+    id: 43,
+    name: "Mass Effect (Legendary)",
+    genre: "Sci-Fi RPG",
+    fps: "40-50",
+    tier: "S",
+    priority: "HIGH",
+    trailer: "https://www.youtube.com/watch?v=n8i53TtQ6IQ",
+    desc: "Command Shepard and save the galaxy.",
+    hours: "17-20",
+    icon: "🚀"
+  },
+  {
+    id: 44,
+    name: "Mass Effect 2 (Legendary)",
+    genre: "Sci-Fi RPG",
+    fps: "45-55",
+    tier: "S",
+    priority: "HIGH",
+    trailer: "https://www.youtube.com/watch?v=lx9sPQpjgjU",
+    desc: "Assemble a team for a suicide mission.",
+    hours: "24-30",
+    icon: "🚀"
+  },
+  {
+    id: 45,
+    name: "Mass Effect 3 (Legendary)",
+    genre: "Sci-Fi RPG",
+    fps: "40-50",
+    tier: "S",
+    priority: "HIGH",
+    trailer: "https://www.youtube.com/watch?v=eBktyyaV9LY",
+    desc: "Final battle against the Reapers.",
+    hours: "24-30",
+    icon: "🚀"
+  },
+  
+  
+  // ==================== TIER A - EXCELLENT ====================
+  {
+    id: 8,
+    name: "Batman: Arkham Knight",
+    genre: "Action-Adventure",
+    fps: "25-35",
+    tier: "A",
+    priority: "MEDIUM-HIGH",
+    trailer: "https://www.youtube.com/watch?v=wsf78BS9VE0",
+    desc: "Epic conclusion with the Batmobile.",
+    hours: "15-18",
+    icon: "🦇"
+  },
+  {
+    id: 11,
+    name: "Far Cry 3",
+    genre: "FPS/Open World",
+    fps: "40-50",
+    tier: "A",
+    priority: "MEDIUM-HIGH",
+    trailer: "https://www.youtube.com/watch?v=ybdiu8iGsZg",
+    desc: "Survive tropical island with insane Vaas.",
+    hours: "15-20",
+    icon: "🏝️"
+  },
+  {
+    id: 20,
+    name: "Doom (2016)",
+    genre: "FPS",
+    fps: "45-55",
+    tier: "A",
+    priority: "MEDIUM-HIGH",
+    trailer: "https://www.youtube.com/watch?v=NteAPGprDJk",
+    desc: "Rip and tear through demons.",
+    hours: "11-13",
+    icon: "😈"
+  },
+  {
+    id: 46,
+    name: "Warhammer 40K: Space Marine",
+    genre: "Third-Person Action",
+    fps: "50-60",
+    tier: "A",
+    priority: "MEDIUM-HIGH",
+    trailer: "https://www.youtube.com/watch?v=nb50aAFiOpM",
+    desc: "Battle Orks as an Ultramarine.",
+    hours: "7-9",
+    icon: "⚔️"
+  },
+  {
+    id: 47,
+    name: "Hades II",
+    genre: "Roguelike",
+    fps: "45-55",
+    tier: "A",
+    priority: "MEDIUM-HIGH",
+    trailer: "https://www.youtube.com/watch?v=CmxOutSzAAA",
+    desc: "Fight through Underworld as Melinoë.",
+    hours: "20-30",
+    icon: "🔱"
+  },
+  
+  
+  // ==================== TIER C - CLASSICS ====================
+  {
+    id: 31,
+    name: "Sleeping Dogs",
+    genre: "Open World Action",
+    fps: "40-50",
+    tier: "C",
+    priority: "LOW-MEDIUM",
+    status: "completed",  // Pre-set as completed
+    trailer: "https://www.youtube.com/watch?v=virg-5zeC0M",
+    desc: "Undercover in Hong Kong triads.",
+    hours: "15-20",
+    icon: "🐉"
+  },
+  {
+    id: 32,
+    name: "Max Payne 3",
+    genre: "Third-Person Shooter",
+    fps: "40-50",
+    tier: "C",
+    priority: "LOW-MEDIUM",
+    trailer: "https://www.youtube.com/watch?v=5MqFhlyGg1U",
+    desc: "Max's final chapter in São Paulo.",
+    hours: "8-10",
+    icon: "🔫"
+  },
+  
+  
+  // ==================== RACING ====================
+  {
+    id: 39,
+    name: "NFS: Hot Pursuit Remastered",
+    genre: "Racing",
+    fps: "50-60",
+    tier: "R",
+    priority: "OPTIONAL",
+    trailer: "https://www.youtube.com/watch?v=qLRy0DjT9J4",
+    desc: "High-speed police chases.",
+    hours: "8-12",
+    icon: "🏎️"
+  },
+  {
+    id: 40,
+    name: "GRID 2",
+    genre: "Racing",
+    fps: "50-60",
+    tier: "R",
+    priority: "OPTIONAL",
+    trailer: "https://www.youtube.com/watch?v=KsI1NV6hoDk",
+    desc: "Arcade-sim racing balance.",
+    hours: "10-15",
+    icon: "🏁"
+  },
+  {
+    id: 48,
+    name: "The Crew",
+    genre: "Racing",
+    fps: "35-45",
+    tier: "R",
+    priority: "OPTIONAL",
+    trailer: "https://www.youtube.com/watch?v=k9TcSHzEsqQ",
+    desc: "Drive across entire USA.",
+    hours: "20-30",
+    icon: "🗺️"
+  },
+
+];
+
+// Make data available globally
+window.GAME_DATA = INITIAL_GAMES;
+
+/*
+  ============================================
+  GAME OBJECT STRUCTURE:
+  ============================================
+  
+  {
+    id: 1,                              // REQUIRED - Unique number
+    name: "Game Name",                  // REQUIRED - String
+    genre: "Genre",                     // REQUIRED - String
+    fps: "30-60",                       // REQUIRED - String (expected FPS range)
+    tier: "S",                          // REQUIRED - S, A, B, C, or R
+    priority: "HIGH",                   // REQUIRED - HIGH, MEDIUM-HIGH, MEDIUM, LOW-MEDIUM, OPTIONAL
+    trailer: "https://youtube.com/...", // OPTIONAL - YouTube URL
+    desc: "Description",                // OPTIONAL - Short description
+    hours: "10-15",                     // OPTIONAL - Time to complete
+    icon: "🎮",                         // OPTIONAL - Emoji icon
+    status: "completed"                 // OPTIONAL - Pre-set status (usually left blank)
+  }
+  
+  ============================================
+  HOW TO ADD A NEW GAME:
+  ============================================
+  
+  1. Find the tier section where you want to add it
+  2. Copy an existing game object
+  3. Paste it at the end of that section
+  4. Change all the values:
+     - id: Use next available number (e.g., 49, 50, 51...)
+     - name: Full game name
+     - genre: Game genre
+     - fps: Expected FPS on your system
+     - tier: S (must play), A (excellent), B (worth it), C (classics), R (racing)
+     - priority: How important to play
+     - trailer: YouTube trailer URL (optional)
+     - desc: Short 1-2 sentence description (optional)
+     - hours: How long to beat (optional)
+     - icon: Emoji that represents the game (optional)
+  5. Don't forget the comma after the closing }
+  
+  EXAMPLE - Adding GTA VI:
+  
+  {
+    id: 49,
+    name: "Grand Theft Auto VI",
+    genre: "Open World Action",
+    fps: "30-40",
+    tier: "S",
+    priority: "HIGH",
+    trailer: "https://www.youtube.com/watch?v=example",
+    desc: "Return to Vice City in the next GTA.",
+    hours: "40-60",
+    icon: "🚗"
+  },
+  
+  ============================================
+  HOW TO REMOVE A GAME:
+  ============================================
+  
+  Option 1: Delete the entire game object
+  - Find the game
+  - Delete from { to }, including the comma
+  
+  Option 2: Comment it out (keeps it for later)
+  - Add // before each line
+  - Or wrap in /* ... */
+  
+  Example:
+  /*
+  {
+    id: 32,
+    name: "Max Payne 3",
+    ...
+  },
+  */
+  
+  ============================================
+  TIER GUIDELINES:
+  ============================================
+  
+  S TIER - Must Play
+  - Essential games
+  - Everyone should play these
+  - High quality, memorable experiences
+  
+  A TIER - Excellent
+  - Outstanding games
+  - Highly recommended
+  - Great quality
+  
+  B TIER - Worth It
+  - Good games
+  - Worth your time
+  - Solid experiences
+  
+  C TIER - Classics
+  - Older games
+  - Still enjoyable
+  - Maybe dated but good
+  
+  R TIER - Racing
+  - Racing games only
+  - Any quality level
+  
+  ============================================
+  TIPS:
+  ============================================
+  
+  - Keep id numbers unique (no duplicates!)
+  - Use consistent naming (full official names)
+  - Be honest with FPS estimates for your system
+  - Keep descriptions short (1-2 sentences)
+  - Use emojis that make sense for the game
+  - Test after adding to make sure no syntax errors
+  
+  ============================================
+  FINDING INFORMATION:
+  ============================================
+  
+  Trailers: Search YouTube for "game name trailer"
+  Hours to beat: Check howlongtobeat.com
+  Genre: Check Steam or game's official site
+  Icon emoji: Pick one that represents the game theme
+  
+  ============================================
+*/
+/*
+  ============================================
+  STORAGE MANAGER
+  ============================================
+  
+  This file handles ALL data saving and loading.
+  Uses localStorage (browser's built-in storage).
+  
+  WHAT IT DOES:
+  - Saves games to browser
+  - Loads games from browser
+  - Exports data to file
+  - Imports data from file
+  - Manages user settings
+  
+  ============================================
+*/
+
+const StorageManager = {
+  
+  // ==================== SAVE GAMES ====================
+  saveGames: function(games) {
+    try {
+      const json = JSON.stringify(games);
+      localStorage.setItem(APP_CONFIG.STORAGE.GAMES_KEY, json);
+      console.log('✅ Games saved successfully');
+      return true;
+    } catch (error) {
+      console.error('❌ Error saving games:', error);
+      alert('Failed to save games. Storage might be full.');
+      return false;
+    }
+  },
+  
+  
+  // ==================== LOAD GAMES ====================
+  loadGames: function() {
+    try {
+      const saved = localStorage.getItem(APP_CONFIG.STORAGE.GAMES_KEY);
+      
+      if (!saved) {
+        console.log('📝 No saved games found, using initial data');
+        return window.GAME_DATA.map(game => ({
+          ...game,
+          status: game.status || APP_CONFIG.STATUS.NOT_DOWNLOADED
+        }));
+      }
+      
+      const savedGames = JSON.parse(saved);
+      const initialGames = window.GAME_DATA;
+      
+      // Merge saved data with initial data
+      const merged = initialGames.map(game => {
+        const savedGame = savedGames.find(sg => sg.id === game.id);
+        return savedGame 
+          ? { ...game, status: savedGame.status, rating: savedGame.rating, notes: savedGame.notes }
+          : { ...game, status: game.status || APP_CONFIG.STATUS.NOT_DOWNLOADED };
+      });
+      
+      // Add any custom games that aren't in initial data
+      const customGames = savedGames.filter(sg => !initialGames.find(ig => ig.id === sg.id));
+      
+      console.log('✅ Games loaded successfully');
+      return [...merged, ...customGames];
+      
+    } catch (error) {
+      console.error('❌ Error loading games:', error);
+      alert('Failed to load saved games. Using default data.');
+      return window.GAME_DATA.map(game => ({
+        ...game,
+        status: game.status || APP_CONFIG.STATUS.NOT_DOWNLOADED
+      }));
+    }
+  },
+  
+  
+  // ==================== SAVE DARK MODE ====================
+  saveDarkMode: function(isDark) {
+    try {
+      localStorage.setItem(APP_CONFIG.STORAGE.DARK_MODE_KEY, JSON.stringify(isDark));
+      console.log('✅ Dark mode preference saved:', isDark);
+      return true;
+    } catch (error) {
+      console.error('❌ Error saving dark mode:', error);
+      return false;
+    }
+  },
+  
+  
+  // ==================== LOAD DARK MODE ====================
+  loadDarkMode: function() {
+    try {
+      const saved = localStorage.getItem(APP_CONFIG.STORAGE.DARK_MODE_KEY);
+      return saved ? JSON.parse(saved) : APP_CONFIG.DEFAULTS.DARK_MODE;
+    } catch (error) {
+      console.error('❌ Error loading dark mode:', error);
+      return APP_CONFIG.DEFAULTS.DARK_MODE;
+    }
+  },
+  
+  
+  // ==================== EXPORT TO FILE ====================
+  exportToFile: function(games) {
+    try {
+      const dataStr = JSON.stringify(games, null, 2);
+      const dataBlob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(dataBlob);
+      
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `gaming-checklist-backup-${Date.now()}.json`;
+      link.click();
+      
+      // Cleanup
+      setTimeout(() => URL.revokeObjectURL(url), 100);
+      
+      console.log('✅ Data exported successfully');
+      return true;
+    } catch (error) {
+      console.error('❌ Error exporting data:', error);
+      alert('Failed to export data.');
+      return false;
+    }
+  },
+  
+  
+  // ==================== IMPORT FROM FILE ====================
+  importFromFile: function(file, callback) {
+    if (!file) {
+      console.error('❌ No file provided');
+      return;
+    }
+    
+    // Check file type
+    if (!file.name.endsWith('.json')) {
+      alert('Please select a valid JSON file');
+      return;
+    }
+    
+    // Check file size
+    if (file.size > APP_CONFIG.VALIDATION.MAX_IMPORT_SIZE) {
+      alert('File is too large. Maximum size is 5MB.');
+      return;
+    }
+    
+    const reader = new FileReader();
+    
+    reader.onload = function(event) {
+      try {
+        const imported = JSON.parse(event.target.result);
+        
+        // Validate data
+        if (!Array.isArray(imported)) {
+          throw new Error('Invalid data format');
+        }
+        
+        console.log('✅ Data imported successfully:', imported.length, 'games');
+        callback(imported);
+        
+      } catch (error) {
+        console.error('❌ Error importing data:', error);
+        alert('Invalid file format. Please select a valid backup file.');
+      }
+    };
+    
+    reader.onerror = function() {
+      console.error('❌ Error reading file');
+      alert('Failed to read file.');
+    };
+    
+    reader.readAsText(file);
+  },
+  
+  
+  // ==================== CLEAR ALL DATA ====================
+  clearAllData: function() {
+    if (!confirm('⚠️ This will delete ALL your data. Are you sure?')) {
+      return false;
+    }
+    
+    if (!confirm('⚠️ Last chance! This cannot be undone. Continue?')) {
+      return false;
+    }
+    
+    try {
+      localStorage.removeItem(APP_CONFIG.STORAGE.GAMES_KEY);
+      localStorage.removeItem(APP_CONFIG.STORAGE.DARK_MODE_KEY);
+      localStorage.removeItem(APP_CONFIG.STORAGE.INSTALL_DISMISSED_KEY);
+      localStorage.removeItem(APP_CONFIG.STORAGE.USER_SETTINGS_KEY);
+      
+      console.log('✅ All data cleared');
+      alert('All data has been cleared. The page will reload.');
+      window.location.reload();
+      return true;
+    } catch (error) {
+      console.error('❌ Error clearing data:', error);
+      alert('Failed to clear data.');
+      return false;
+    }
+  },
+  
+  
+  // ==================== GET STORAGE INFO ====================
+  getStorageInfo: function() {
+    try {
+      // Estimate storage usage
+      let totalSize = 0;
+      for (let key in localStorage) {
+        if (localStorage.hasOwnProperty(key)) {
+          totalSize += localStorage[key].length + key.length;
+        }
+      }
+      
+      // Convert to KB
+      const sizeKB = (totalSize / 1024).toFixed(2);
+      
+      return {
+        itemCount: localStorage.length,
+        sizeKB: sizeKB,
+        sizeMB: (sizeKB / 1024).toFixed(2),
+        keys: Object.keys(localStorage)
+      };
+    } catch (error) {
+      console.error('❌ Error getting storage info:', error);
+      return null;
+    }
+  },
+  
+  
+  // ==================== CHECK IF STORAGE AVAILABLE ====================
+  isStorageAvailable: function() {
+    try {
+      const test = '__storage_test__';
+      localStorage.setItem(test, test);
+      localStorage.removeItem(test);
+      return true;
+    } catch (error) {
+      console.warn('⚠️ localStorage not available:', error);
+      return false;
+    }
+  },
+  
+};
+
+// Make StorageManager available globally
+window.StorageManager = StorageManager;
+
+// Check if storage is available on load
+if (!StorageManager.isStorageAvailable()) {
+  alert('⚠️ Warning: Browser storage is not available. Your data will not be saved!');
+}
+
+/*
+  ============================================
+  HOW TO USE THIS FILE:
+  ============================================
+  
+  SAVE GAMES:
+  StorageManager.saveGames(gamesArray);
+  
+  LOAD GAMES:
+  const games = StorageManager.loadGames();
+  
+  SAVE DARK MODE:
+  StorageManager.saveDarkMode(true);
+  
+  LOAD DARK MODE:
+  const isDark = StorageManager.loadDarkMode();
+  
+  EXPORT DATA:
+  StorageManager.exportToFile(gamesArray);
+  
+  IMPORT DATA:
+  StorageManager.importFromFile(file, (importedGames) => {
+    // Do something with imported games
+    setGames(importedGames);
+  });
+  
+  CLEAR ALL DATA:
+  StorageManager.clearAllData();
+  
+  CHECK STORAGE SIZE:
+  const info = StorageManager.getStorageInfo();
+  console.log('Storage used:', info.sizeMB, 'MB');
+  
+  ============================================
+  WHEN DATA IS SAVED:
+  ============================================
+  
+  Data is automatically saved when you:
+  - Change game status
+  - Add notes
+  - Rate a game
+  - Add new game
+  - Delete a game
+  - Toggle dark mode
+  
+  The app.js file calls these functions automatically.
+  
+  ============================================
+  TROUBLESHOOTING:
+  ============================================
+  
+  DATA NOT SAVING:
+  1. Check if storage is available:
+     StorageManager.isStorageAvailable()
+  2. Check browser's storage quota
+  3. Try clearing browser cache
+  4. Check for errors in console
+  
+  DATA LOST AFTER CLOSING:
+  1. Make sure you're on same domain
+  2. Don't use incognito/private mode
+  3. Check browser settings allow storage
+  
+  IMPORT NOT WORKING:
+  1. Make sure file is .json format
+  2. Check file size (max 5MB)
+  3. Verify file was exported from this app
+  
+  ============================================
+  STORAGE LIMITS:
+  ============================================
+  
+  - localStorage typically has 5-10MB limit
+  - This app should use less than 1MB
+  - You can store thousands of games
+  - Export regularly as backup
+  
+  ============================================
+  PRIVACY NOTE:
+  ============================================
+  
+  All data is stored LOCALLY in your browser.
+  - No data sent to servers
+  - No tracking
+  - No analytics
+  - Your data stays on your device
+  
+  ============================================
+*/
+/*
+  ============================================
+  ICON COMPONENTS
+  ============================================
+  
+  This file contains all SVG icons used in the app.
+  Replaces lucide-react to avoid external dependencies.
+  
+  TO ADD A NEW ICON:
+  1. Find SVG code online (feathericons.com)
+  2. Add it to the icons object below
+  3. Use like: <Icon name="newicon" />
+  
+  ============================================
+*/
+
+const Icon = ({ name, size = 20, className = "", fill = "none" }) => {
+  const icons = {
+    
+    // Status icons
+    circle: `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="${fill}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>`,
+    
+    download: `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="${fill}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`,
+    
+    play: `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="${fill}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>`,
+    
+    check: `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="${fill}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
+    
+    star: `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="${fill}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
+    
+    // Action icons
+    plus: `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="${fill}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`,
+    
+    trash: `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="${fill}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>`,
+    
+    upload: `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="${fill}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>`,
+    
+    // Navigation icons
+    chevronDown: `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="${fill}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>`,
+    
+    chevronUp: `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="${fill}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>`,
+    
+    // Feature icons
+    search: `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="${fill}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>`,
+    
+    sliders: `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="${fill}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>`,
+    
+    // Theme icons
+    moon: `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="${fill}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`,
+    
+    sun: `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="${fill}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`,
+    
+    // External link icons
+    youtube: `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="${fill}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"/><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"/></svg>`,
+    
+    book: `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="${fill}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>`,
+  };
+  
+  const svgHTML = icons[name] || icons.circle;
+  
+  return React.createElement('span', {
+    className: className,
+    dangerouslySetInnerHTML: { __html: svgHTML }
+  });
+};
+
+// Make Icon available globally
+window.Icon = Icon;
+
+/*
+  ============================================
+  HOW TO USE ICONS:
+  ============================================
+  
+  Basic usage:
+  <Icon name="star" />
+  
+  With size:
+  <Icon name="star" size={24} />
+  
+  With color (via className):
+  <Icon name="star" className="text-yellow-500" />
+  
+  With fill:
+  <Icon name="star" fill="currentColor" />
+  
+  ============================================
+  AVAILABLE ICONS:
+  ============================================
+  
+  STATUS:
+  - circle (not downloaded)
+  - download (downloaded)
+  - play (playing)
+  - check (completed)
+  - star (favorite)
+  
+  ACTIONS:
+  - plus (add)
+  - trash (delete)
+  - upload (import)
+  
+  NAVIGATION:
+  - chevronDown (expand)
+  - chevronUp (collapse)
+  
+  FEATURES:
+  - search
+  - sliders (filters/sort)
+  
+  THEME:
+  - moon (dark mode)
+  - sun (light mode)
+  
+  EXTERNAL:
+  - youtube
+  - book (gameranx)
+  
+  ============================================
+  TO ADD A NEW ICON:
+  ============================================
+  
+  1. Go to feathericons.com
+  2. Find icon you want
+  3. Click "Copy SVG"
+  4. Add to icons object above:
+  
+  newicon: `<svg ...paste here...></svg>`,
+  
+  5. Replace hardcoded width/height with ${size}
+  6. Use it: <Icon name="newicon" />
+  
+  ============================================
+  CUSTOMIZATION:
+  ============================================
+  
+  Change default size:
+  - Edit size = 20 to size = 24 (or any number)
+  
+  Change stroke width:
+  - Edit stroke-width="2" in SVG
+  - Higher = thicker lines
+  
+  Change default fill:
+  - Edit fill = "none" to fill = "currentColor"
+  
+  ============================================
+*/
+/*
+  ============================================
+  UI COMPONENTS
+  ============================================
+  
+  This file contains reusable UI pieces that are used
+  throughout the app.
+  
+  COMPONENTS:
+  - Header (app title, dark mode toggle)
+  - ProgressBar (completion tracking)
+  - StatsCards (game statistics)
+  - FilterButtons (status filters)
+  - SearchBar (game search)
+  - SortOptions (sorting controls)
+  
+  ============================================
+*/
+
+const { useState } = React;
+
+// ==================== HEADER COMPONENT ====================
+const Header = ({ darkMode, setDarkMode, stats }) => {
+  const textClass = darkMode ? 'text-gray-100' : 'text-gray-800';
+  const textMuted = darkMode ? 'text-gray-400' : 'text-gray-600';
+  const cardBg = darkMode ? 'bg-gray-800' : 'bg-white';
+  
+  return (
+    <div className={`${cardBg} rounded-xl shadow-2xl p-4 mb-4`}>
+      <div className="flex justify-between items-center mb-2">
+        <h1 className={`text-2xl font-bold ${textClass}`}>
+          {APP_CONFIG.APP_NAME}
+        </h1>
+        {APP_CONFIG.FEATURES.ENABLE_DARK_MODE && (
+          <button 
+            onClick={() => setDarkMode(!darkMode)}
+            className="p-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 transition-colors"
+            aria-label="Toggle dark mode"
+          >
+            <Icon name={darkMode ? 'sun' : 'moon'} size={20} />
+          </button>
+        )}
+      </div>
+      <p className={`text-sm ${textMuted}`}>
+        Tap card to expand • Tap icon to change status
+      </p>
+      
+      {/* Progress Bar */}
+      <ProgressBar stats={stats} darkMode={darkMode} textClass={textClass} textMuted={textMuted} />
+    </div>
+  );
+};
+
+
+// ==================== PROGRESS BAR COMPONENT ====================
+const ProgressBar = ({ stats, darkMode, textClass, textMuted }) => {
+  return (
+    <div className="mt-3">
+      <div className="flex justify-between text-xs mb-1">
+        <span className={textMuted}>Completion Progress</span>
+        <span className={textClass}>{stats.completionPercent}%</span>
+      </div>
+      <div className="w-full bg-gray-300 rounded-full h-2">
+        <div 
+          className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all duration-500"
+          style={{width: `${stats.completionPercent}%`}}
+        ></div>
+      </div>
+      <p className="text-xs mt-1 text-center" style={{color: darkMode ? '#9ca3af' : '#6b7280'}}>
+        {stats.completed + stats.favorite} of {stats.total} games completed
+      </p>
+    </div>
+  );
+};
+
+
+// ==================== STATS CARDS COMPONENT ====================
+const StatsCards = ({ stats, darkMode }) => {
+  const cardBg = darkMode ? 'bg-gray-800' : 'bg-white';
+  const textClass = darkMode ? 'text-gray-100' : 'text-gray-800';
+  const textMuted = darkMode ? 'text-gray-400' : 'text-gray-600';
+  
+  return (
+    <div className="grid grid-cols-3 gap-2 mb-4">
+      {/* Total Games */}
+      <div className={`${cardBg} rounded-lg p-3 text-center shadow`}>
+        <div className={`text-xl font-bold ${textClass}`}>{stats.total}</div>
+        <div className={`text-xs ${textMuted}`}>Total</div>
+      </div>
+      
+      {/* Playing */}
+      <div className={`${darkMode ? 'bg-green-900' : 'bg-green-100'} rounded-lg p-3 text-center shadow`}>
+        <div className={`text-xl font-bold ${darkMode ? 'text-green-300' : 'text-green-700'}`}>
+          {stats.playing}
+        </div>
+        <div className={`text-xs ${darkMode ? 'text-green-400' : 'text-green-700'}`}>
+          Playing
+        </div>
+      </div>
+      
+      {/* Completed */}
+      <div className={`${darkMode ? 'bg-purple-900' : 'bg-purple-100'} rounded-lg p-3 text-center shadow`}>
+        <div className={`text-xl font-bold ${darkMode ? 'text-purple-300' : 'text-purple-700'}`}>
+          {stats.completed}
+        </div>
+        <div className={`text-xs ${darkMode ? 'text-purple-400' : 'text-purple-700'}`}>
+          Done
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
+// ==================== FILTER BUTTONS COMPONENT ====================
+const FilterButtons = ({ filter, setFilter, stats, darkMode }) => {
+  const cardBg = darkMode ? 'bg-gray-800' : 'bg-white';
+  
+  const filters = [
+    ['all', 'All', stats.total],
+    ['not_downloaded', 'Not DL', stats.not_downloaded],
+    ['downloaded', 'Downloaded', stats.downloaded],
+    ['playing', 'Playing', stats.playing],
+    ['completed', 'Done', stats.completed],
+    ['favorite', 'Fav', stats.favorite]
+  ];
+  
+  return (
+    <div className={`${cardBg} rounded-xl shadow-xl p-3 mb-4`}>
+      <div className="flex gap-2 overflow-x-auto pb-2">
+        {filters.map(([key, label, count]) => (
+          <button
+            key={key}
+            onClick={() => setFilter(key)}
+            className={`px-3 py-2 rounded whitespace-nowrap text-sm font-medium transition-colors ${
+              filter === key 
+                ? 'bg-purple-600 text-white' 
+                : darkMode 
+                  ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            {label} ({count})
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+
+// ==================== SEARCH BAR COMPONENT ====================
+const SearchBar = ({ searchTerm, setSearchTerm, showSort, setShowSort, darkMode }) => {
+  const cardBg = darkMode ? 'bg-gray-800' : 'bg-white';
+  
+  if (!APP_CONFIG.FEATURES.ENABLE_SEARCH) return null;
+  
+  return (
+    <div className={`${cardBg} rounded-xl shadow-xl p-3 mb-4`}>
+      <div className="flex gap-2">
+        <div className="flex-1 relative">
+          <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+            <Icon name="search" size={18} />
+          </span>
+          <input
+            type="text"
+            placeholder="Search games..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className={`w-full pl-10 pr-3 py-2 rounded-lg border ${
+              darkMode 
+                ? 'bg-gray-700 text-white border-gray-600' 
+                : 'bg-white border-gray-300'
+            } focus:outline-none focus:ring-2 focus:ring-purple-500`}
+          />
+        </div>
+        {APP_CONFIG.FEATURES.ENABLE_SORTING && (
+          <button
+            onClick={() => setShowSort(!showSort)}
+            className="px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+            aria-label="Sort options"
+          >
+            <Icon name="sliders" size={20} />
+          </button>
+        )}
+      </div>
+    </div>
+  );
+};
+
+
+// ==================== SORT OPTIONS COMPONENT ====================
+const SortOptions = ({ sortBy, setSortBy, showSort, darkMode }) => {
+  if (!showSort || !APP_CONFIG.FEATURES.ENABLE_SORTING) return null;
+  
+  const sortOptions = [
+    ['tier', 'By Tier'],
+    ['name', 'By Name'],
+    ['fps', 'By FPS'],
+    ['rating', 'By Rating']
+  ];
+  
+  return (
+    <div className="mt-3 flex gap-2 flex-wrap animate-fadeIn">
+      {sortOptions.map(([key, label]) => (
+        <button
+          key={key}
+          onClick={() => setSortBy(key)}
+          className={`px-3 py-1 rounded text-sm transition-colors ${
+            sortBy === key 
+              ? 'bg-purple-600 text-white' 
+              : darkMode 
+                ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+          }`}
+        >
+          {label}
+        </button>
+      ))}
+    </div>
+  );
+};
+
+
+// ==================== BACKUP BUTTONS COMPONENT ====================
+const BackupButtons = ({ onExport, onImport, darkMode }) => {
+  const cardBg = darkMode ? 'bg-gray-800' : 'bg-white';
+  
+  if (!APP_CONFIG.FEATURES.ENABLE_EXPORT && !APP_CONFIG.FEATURES.ENABLE_IMPORT) {
+    return null;
+  }
+  
+  return (
+    <div className={`${cardBg} rounded-xl shadow-xl p-3 mb-4 flex gap-2`}>
+      {APP_CONFIG.FEATURES.ENABLE_EXPORT && (
+        <button
+          onClick={onExport}
+          className="flex-1 flex items-center justify-center gap-2 bg-green-500 text-white p-2 rounded-lg font-medium text-sm hover:bg-green-600 transition-colors"
+        >
+          <Icon name="download" size={16} /> Export
+        </button>
+      )}
+      {APP_CONFIG.FEATURES.ENABLE_IMPORT && (
+        <label className="flex-1 flex items-center justify-center gap-2 bg-blue-500 text-white p-2 rounded-lg font-medium text-sm cursor-pointer hover:bg-blue-600 transition-colors">
+          <Icon name="upload" size={16} /> Import
+          <input 
+            type="file" 
+            accept=".json" 
+            onChange={onImport} 
+            className="hidden" 
+          />
+        </label>
+      )}
+    </div>
+  );
+};
+
+
+// ==================== EMPTY STATE COMPONENT ====================
+const EmptyState = ({ darkMode, searchTerm, filter }) => {
+  const cardBg = darkMode ? 'bg-gray-800' : 'bg-white';
+  const textMuted = darkMode ? 'text-gray-400' : 'text-gray-600';
+  
+  return (
+    <div className={`${cardBg} rounded-xl shadow-xl p-8 text-center`}>
+      <div className="text-6xl mb-4">🎮</div>
+      <p className={`${textMuted} text-lg font-medium mb-2`}>No games found</p>
+      <p className={`${textMuted} text-sm`}>
+        {searchTerm 
+          ? `No games match "${searchTerm}"`
+          : filter !== 'all'
+            ? `No games in this category`
+            : 'Start by adding some games!'
+        }
+      </p>
+      <p className={`${textMuted} text-xs mt-3`}>
+        Try adjusting your search or filter
+      </p>
+    </div>
+  );
+};
+
+
+// ==================== LEGEND COMPONENT ====================
+const Legend = ({ darkMode }) => {
+  const cardBg = darkMode ? 'bg-gray-800' : 'bg-white';
+  const textClass = darkMode ? 'text-gray-100' : 'text-gray-800';
+  const textMuted = darkMode ? 'text-gray-400' : 'text-gray-600';
+  
+  return (
+    <div className={`${cardBg} rounded-xl shadow-xl p-4 mt-6`}>
+      <h3 className={`font-bold mb-3 ${textClass}`}>How to Use</h3>
+      <div className={`space-y-2 text-sm ${textMuted}`}>
+        <p>• <strong>Tap card</strong> to expand details</p>
+        <p>• <strong>Tap status icon</strong> to cycle statuses</p>
+        {APP_CONFIG.FEATURES.ENABLE_RATINGS && <p>• <strong>Tap stars</strong> to rate games</p>}
+        {APP_CONFIG.FEATURES.ENABLE_NOTES && <p>• <strong>Add notes</strong> to remember thoughts</p>}
+        {(APP_CONFIG.FEATURES.ENABLE_EXPORT || APP_CONFIG.FEATURES.ENABLE_IMPORT) && 
+          <p>• <strong>Export/Import</strong> to backup your data</p>
+        }
+      </div>
+      
+      <h3 className={`font-bold mt-4 mb-2 ${textClass}`}>Status Icons</h3>
+      <div className="grid grid-cols-2 gap-2 text-sm">
+        <div className="flex items-center gap-2">
+          <Icon name="circle" size={16} className="text-gray-400" /> 
+          <span className={textMuted}>Not Downloaded</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Icon name="download" size={16} className="text-blue-500" /> 
+          <span className={textMuted}>Downloaded</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Icon name="play" size={16} className="text-green-500" /> 
+          <span className={textMuted}>Playing</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Icon name="check" size={16} className="text-purple-500" /> 
+          <span className={textMuted}>Completed</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Icon name="star" size={16} fill="currentColor" className="text-yellow-500" /> 
+          <span className={textMuted}>Favorite</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
+// ==================== FOOTER COMPONENT ====================
+const Footer = ({ darkMode }) => {
+  const textMuted = darkMode ? 'text-gray-400' : 'text-gray-600';
+  
+  return (
+    <div className={`text-center text-sm ${textMuted} mt-6 mb-4`}>
+      Made with ❤️ for {APP_CONFIG.APP_AUTHOR}'s Gaming Journey
+      <div className="text-xs mt-1 opacity-75">
+        v{APP_CONFIG.APP_VERSION}
+      </div>
+    </div>
+  );
+};
+
+
+// Make all components available globally
+window.UIComponents = {
+  Header,
+  ProgressBar,
+  StatsCards,
+  FilterButtons,
+  SearchBar,
+  SortOptions,
+  BackupButtons,
+  EmptyState,
+  Legend,
+  Footer
+};
+
+/*
+  ============================================
+  HOW TO USE THESE COMPONENTS:
+  ============================================
+  
+  Import in your app:
+  const { Header, StatsCards, FilterButtons } = window.UIComponents;
+  
+  Use in JSX:
+  <Header darkMode={darkMode} setDarkMode={setDarkMode} stats={stats} />
+  <StatsCards stats={stats} darkMode={darkMode} />
+  <FilterButtons filter={filter} setFilter={setFilter} stats={stats} darkMode={darkMode} />
+  
+  ============================================
+  CUSTOMIZATION:
+  ============================================
+  
+  To modify a component:
+  1. Find the component function
+  2. Change the JSX/logic
+  3. Save and refresh
+  
+  To add a new component:
+  1. Create function following same pattern
+  2. Add to window.UIComponents export
+  3. Use in app.js
+  
+  ============================================
+  PROPS REFERENCE:
+  ============================================
+  
+  Header:
+  - darkMode: boolean
+  - setDarkMode: function
+  - stats: object {total, completed, etc.}
+  
+  StatsCards:
+  - stats: object
+  - darkMode: boolean
+  
+  FilterButtons:
+  - filter: string
+  - setFilter: function
+  - stats: object
+  - darkMode: boolean
+  
+  SearchBar:
+  - searchTerm: string
+  - setSearchTerm: function
+  - showSort: boolean
+  - setShowSort: function
+  - darkMode: boolean
+  
+  SortOptions:
+  - sortBy: string
+  - setSortBy: function
+  - showSort: boolean
+  - darkMode: boolean
+  
+  BackupButtons:
+  - onExport: function
+  - onImport: function
+  - darkMode: boolean
+  
+  EmptyState:
+  - darkMode: boolean
+  - searchTerm: string
+  - filter: string
+  
+  Legend:
+  - darkMode: boolean
+  
+  Footer:
+  - darkMode: boolean
+  
+  ============================================
+*/
+/*
+  ============================================
+  GAME CARD COMPONENT
+  ============================================
+  
+  This file handles the display of individual games.
+  Each game shows as a card with:
+  - Icon and name
+  - Tier badge
+  - Status indicator
+  - Expandable details
+  - Rating system
+  - Notes
+  - Action links
+  
+  ============================================
+*/
+
+// ==================== MAIN GAME CARD COMPONENT ====================
+const GameCard = ({ 
+  game, 
+  darkMode, 
+  isExpanded, 
+  onToggleExpand,
+  onUpdateStatus,
+  onUpdateRating,
+  onUpdateNotes,
+  onDelete
+}) => {
+  
+  const [isEditingNotes, setIsEditingNotes] = useState(false);
+  const [tempNotes, setTempNotes] = useState(game.notes || '');
+  
+  // Get background color based on status
+  const getBg = (status) => {
+    if (darkMode) {
+      const bgs = {
+        not_downloaded: 'bg-gray-800',
+        downloaded: 'bg-blue-900',
+        playing: 'bg-green-900',
+        completed: 'bg-purple-900',
+        favorite: 'bg-yellow-900'
+      };
+      return bgs[status] || 'bg-gray-800';
+    }
+    const bgs = {
+      not_downloaded: 'bg-white',
+      downloaded: 'bg-blue-50',
+      playing: 'bg-green-50',
+      completed: 'bg-purple-50',
+      favorite: 'bg-yellow-50'
+    };
+    return bgs[status] || 'bg-white';
+  };
+  
+  // Get status icon
+  const getStatusIcon = (status) => {
+    const iconMap = {
+      not_downloaded: { name: 'circle', className: 'text-gray-400' },
+      downloaded: { name: 'download', className: 'text-blue-500' },
+      playing: { name: 'play', className: 'text-green-500' },
+      completed: { name: 'check', className: 'text-purple-500' },
+      favorite: { name: 'star', className: 'text-yellow-500', fill: 'currentColor' }
+    };
+    const icon = iconMap[status] || iconMap.not_downloaded;
+    return <Icon name={icon.name} size={20} className={icon.className} fill={icon.fill} />;
+  };
+  
+  // Get tier badge
+  const getTierBadge = (tier) => {
+    const tierInfo = APP_CONFIG.TIERS[tier];
+    if (!tierInfo) return null;
+    
+    return (
+      <span className={`px-2 py-1 rounded text-xs font-bold ${tierInfo.color} text-white`}>
+        {tierInfo.label}
+      </span>
+    );
+  };
+  
+  // Handle save notes
+  const handleSaveNotes = () => {
+    onUpdateNotes(game.id, tempNotes);
+    setIsEditingNotes(false);
+  };
+  
+  // Handle cancel notes
+  const handleCancelNotes = () => {
+    setTempNotes(game.notes || '');
+    setIsEditingNotes(false);
+  };
+  
+  return (
+    <div className={`${getBg(game.status)} rounded-xl shadow-lg overflow-hidden transition-all`}>
+      
+      {/* ========== COLLAPSED VIEW ========== */}
+      <div
+        onClick={onToggleExpand}
+        className="p-4 cursor-pointer active:opacity-80 transition-opacity"
+      >
+        <div className="flex items-start justify-between gap-3">
+          
+          {/* Left side: Icon + Info */}
+          <div className="flex items-start gap-3 flex-1 min-w-0">
+            {/* Game Icon */}
+            <div className="text-3xl flex-shrink-0">
+              {game.icon || '🎮'}
+            </div>
+            
+            {/* Game Info */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1 flex-wrap">
+                <h3 className={`font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+                  {game.name}
+                </h3>
+                {getTierBadge(game.tier)}
+              </div>
+              
+              <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'} space-y-1`}>
+                <div>📂 {game.genre} • ⚡ {game.fps} FPS</div>
+                {game.hours && <div>⏱️ {game.hours} hours</div>}
+                
+                {/* Rating stars (small preview) */}
+                {APP_CONFIG.FEATURES.ENABLE_RATINGS && game.rating > 0 && (
+                  <div className="flex gap-1">
+                    {[1,2,3,4,5].map(i => (
+                      <Icon 
+                        key={i} 
+                        name="star" 
+                        size={12} 
+                        fill={i <= game.rating ? 'currentColor' : 'none'} 
+                        className={i <= game.rating ? 'text-yellow-500' : 'text-gray-400'} 
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+          
+          {/* Right side: Status + Expand */}
+          <div className="flex flex-col items-center gap-2">
+            <div onClick={(e) => { e.stopPropagation(); onUpdateStatus(game.id); }}>
+              {getStatusIcon(game.status)}
+            </div>
+            <Icon name={isExpanded ? 'chevronUp' : 'chevronDown'} size={16} />
+          </div>
+        </div>
+      </div>
+      
+      {/* ========== EXPANDED VIEW ========== */}
+      {isExpanded && (
+        <div className={`px-4 pb-4 space-y-3 border-t ${darkMode ? 'border-gray-700' : 'border-gray-200'} pt-3`}>
+          
+          {/* Description */}
+          {game.desc && (
+            <p className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'} leading-relaxed`}>
+              {game.desc}
+            </p>
+          )}
+          
+          {/* Rating Section */}
+          {APP_CONFIG.FEATURES.ENABLE_RATINGS && (
+            <div>
+              <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'} mb-1`}>
+                Your Rating:
+              </p>
+              <div className="flex gap-1">
+                {[1,2,3,4,5].map(i => (
+                  <button
+                    key={i}
+                    onClick={(e) => { 
+                      e.stopPropagation(); 
+                      onUpdateRating(game.id, i); 
+                    }}
+                    className="focus:outline-none hover:scale-110 transition-transform"
+                  >
+                    <Icon 
+                      name="star" 
+                      size={20} 
+                      fill={i <= (game.rating || 0) ? 'currentColor' : 'none'} 
+                      className={i <= (game.rating || 0) ? 'text-yellow-500' : 'text-gray-400'} 
+                    />
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {/* Notes Section */}
+          {APP_CONFIG.FEATURES.ENABLE_NOTES && (
+            <div>
+              <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'} mb-1`}>
+                Notes:
+              </p>
+              {isEditingNotes ? (
+                <div className="space-y-2">
+                  <textarea
+                    value={tempNotes}
+                    onChange={(e) => setTempNotes(e.target.value)}
+                    maxLength={APP_CONFIG.VALIDATION.MAX_NOTES_LENGTH}
+                    className={`w-full p-2 border rounded text-sm ${
+                      darkMode 
+                        ? 'bg-gray-700 text-white border-gray-600' 
+                        : 'bg-white border-gray-300'
+                    } focus:outline-none focus:ring-2 focus:ring-purple-500`}
+                    rows="3"
+                    placeholder="Add your thoughts about this game..."
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                  <div className="text-xs text-right opacity-60">
+                    {tempNotes.length} / {APP_CONFIG.VALIDATION.MAX_NOTES_LENGTH}
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleSaveNotes(); }}
+                      className="flex-1 bg-green-500 text-white p-2 rounded text-sm font-bold hover:bg-green-600 transition-colors"
+                    >
+                      Save
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleCancelNotes(); }}
+                      className="flex-1 bg-gray-300 text-gray-700 p-2 rounded text-sm font-bold hover:bg-gray-400 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  onClick={(e) => { 
+                    e.stopPropagation(); 
+                    setIsEditingNotes(true); 
+                    setTempNotes(game.notes || ''); 
+                  }}
+                  className={`w-full p-2 border rounded text-sm text-left ${
+                    darkMode 
+                      ? 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600' 
+                      : 'bg-gray-50 border-gray-300 hover:bg-gray-100'
+                  } transition-colors`}
+                >
+                  {game.notes || 'Add notes...'}
+                </button>
+              )}
+            </div>
+          )}
+          
+          {/* Action Links */}
+          {APP_CONFIG.FEATURES.ENABLE_ONLINE_FEATURES && (
+            <div className="space-y-2">
+              {/* Trailer Button */}
+              {APP_CONFIG.FEATURES.ENABLE_TRAILERS && game.trailer && (
+                <a
+                  href={game.trailer}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 bg-red-500 text-white p-3 rounded-lg font-bold hover:bg-red-600 transition-colors"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Icon name="youtube" size={18} /> Watch Trailer
+                </a>
+              )}
+              
+              {/* Gameranx Button */}
+              {APP_CONFIG.FEATURES.ENABLE_GAMERANX && (
+                <a
+                  href={APP_CONFIG.LINKS.GAMERANX_SEARCH.replace('{GAME}', encodeURIComponent(game.name))}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 bg-blue-500 text-white p-3 rounded-lg font-bold hover:bg-blue-600 transition-colors"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Icon name="book" size={18} /> Gameranx Review
+                </a>
+              )}
+            </div>
+          )}
+          
+          {/* Delete Button (only for custom games) */}
+          {APP_CONFIG.FEATURES.ENABLE_DELETE_GAME && game.id >= 1000 && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onDelete(game.id); }}
+              className="w-full flex items-center justify-center gap-2 bg-red-600 text-white p-2 rounded-lg text-sm font-bold hover:bg-red-700 transition-colors"
+            >
+              <Icon name="trash" size={16} /> Delete Game
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+
+// Make GameCard available globally
+window.GameCard = GameCard;
+
+/*
+  ============================================
+  HOW TO USE GAME CARD:
+  ============================================
+  
+  <GameCard
+    game={gameObject}
+    darkMode={isDark}
+    isExpanded={expandedId === game.id}
+    onToggleExpand={() => toggleExpand(game.id)}
+    onUpdateStatus={(id) => updateStatus(id)}
+    onUpdateRating={(id, rating) => updateRating(id, rating)}
+    onUpdateNotes={(id, notes) => updateNotes(id, notes)}
+    onDelete={(id) => deleteGame(id)}
+  />
+  
+  ============================================
+  GAME OBJECT STRUCTURE:
+  ============================================
+  
+  {
+    id: 1,
+    name: "Game Name",
+    genre: "Genre",
+    fps: "30-60",
+    tier: "S",
+    priority: "HIGH",
+    trailer: "https://youtube.com/...",
+    desc: "Description",
+    hours: "10-15",
+    icon: "🎮",
+    status: "playing",      // Optional
+    rating: 4,              // Optional (1-5)
+    notes: "My thoughts"    // Optional
+  }
+  
+  ============================================
+  CUSTOMIZATION:
+  ============================================
+  
+  Change card colors:
+  - Edit getBg() function
+  
+  Change layout:
+  - Modify JSX structure
+  
+  Add new fields:
+  - Add to game object in data.js
+  - Display in card JSX
+  
+  Remove features:
+  - Comment out sections
+  - Or disable in config.js
+  
+  ============================================
+  PROPS:
+  ============================================
+  
+  game: object (required)
+    - The game data object
+  
+  darkMode: boolean (required)
+    - Whether dark mode is active
+  
+  isExpanded: boolean (required)
+    - Whether this card is expanded
+  
+  onToggleExpand: function (required)
+    - Called when user clicks to expand/collapse
+  
+  onUpdateStatus: function (required)
+    - Called when status icon is clicked
+    - Receives: game.id
+  
+  onUpdateRating: function (optional)
+    - Called when rating star is clicked
+    - Receives: game.id, rating (1-5)
+  
+  onUpdateNotes: function (optional)
+    - Called when notes are saved
+    - Receives: game.id, notes (string)
+  
+  onDelete: function (optional)
+    - Called when delete button clicked
+    - Receives: game.id
+  
+  ============================================
+*/
+/*
+  ============================================
+  FEATURES & LOGIC
+  ============================================
+  
+  This file contains the main app features:
+  - Search functionality
+  - Filter functionality
+  - Sort functionality
+  - Add new game
+  - Statistics calculation
+  
+  ============================================
+*/
+
+// ==================== SEARCH FUNCTION ====================
+const searchGames = (games, searchTerm) => {
+  if (!searchTerm || !APP_CONFIG.FEATURES.ENABLE_SEARCH) {
+    return games;
+  }
+  
+  const term = searchTerm.toLowerCase().trim();
+  
+  return games.filter(game => {
+    const nameMatch = game.name.toLowerCase().includes(term);
+    const genreMatch = game.genre.toLowerCase().includes(term);
+    const descMatch = game.desc && game.desc.toLowerCase().includes(term);
+    
+    return nameMatch || genreMatch || descMatch;
+  });
+};
+
+
+// ==================== FILTER FUNCTION ====================
+const filterGames = (games, filter) => {
+  if (!APP_CONFIG.FEATURES.ENABLE_FILTERS || filter === 'all') {
+    return games;
+  }
+  
+  return games.filter(game => game.status === filter);
+};
+
+
+// ==================== SORT FUNCTION ====================
+const sortGames = (games, sortBy) => {
+  if (!APP_CONFIG.FEATURES.ENABLE_SORTING) {
+    return games;
+  }
+  
+  const sorted = [...games];
+  
+  switch(sortBy) {
+    case 'name':
+      sorted.sort((a, b) => a.name.localeCompare(b.name));
+      break;
+      
+    case 'fps':
+      sorted.sort((a, b) => {
+        // Extract max FPS from "30-60" format
+        const aFps = parseInt(a.fps.split('-')[1] || a.fps.split('-')[0] || 0);
+        const bFps = parseInt(b.fps.split('-')[1] || b.fps.split('-')[0] || 0);
+        return bFps - aFps; // Descending order
+      });
+      break;
+      
+    case 'rating':
+      sorted.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+      break;
+      
+    case 'tier':
+    default:
+      const tierOrder = { 'S': 0, 'A': 1, 'B': 2, 'C': 3, 'R': 4 };
+      sorted.sort((a, b) => {
+        if (tierOrder[a.tier] !== tierOrder[b.tier]) {
+          return tierOrder[a.tier] - tierOrder[b.tier];
+        }
+        return a.name.localeCompare(b.name);
+      });
+      break;
+  }
+  
+  return sorted;
+};
+
+
+// ==================== CALCULATE STATISTICS ====================
+const calculateStats = (games) => {
+  const total = games.length;
+  const not_downloaded = games.filter(g => g.status === APP_CONFIG.STATUS.NOT_DOWNLOADED).length;
+  const downloaded = games.filter(g => g.status === APP_CONFIG.STATUS.DOWNLOADED).length;
+  const playing = games.filter(g => g.status === APP_CONFIG.STATUS.PLAYING).length;
+  const completed = games.filter(g => g.status === APP_CONFIG.STATUS.COMPLETED).length;
+  const favorite = games.filter(g => g.status === APP_CONFIG.STATUS.FAVORITE).length;
+  
+  const completedCount = completed + favorite;
+  const completionPercent = total > 0 ? Math.round((completedCount / total) * 100) : 0;
+  
+  return {
+    total,
+    not_downloaded,
+    downloaded,
+    playing,
+    completed,
+    favorite,
+    completionPercent
+  };
+};
+
+
+// ==================== UPDATE GAME STATUS ====================
+const updateGameStatus = (games, gameId) => {
+  return games.map(game => {
+    if (game.id === gameId) {
+      const currentIndex = APP_CONFIG.STATUS_CYCLE.indexOf(game.status);
+      const nextIndex = (currentIndex + 1) % APP_CONFIG.STATUS_CYCLE.length;
+      const nextStatus = APP_CONFIG.STATUS_CYCLE[nextIndex];
+      
+      return { ...game, status: nextStatus };
+    }
+    return game;
+  });
+};
+
+
+// ==================== UPDATE GAME RATING ====================
+const updateGameRating = (games, gameId, rating) => {
+  if (!APP_CONFIG.FEATURES.ENABLE_RATINGS) {
+    return games;
+  }
+  
+  return games.map(game => 
+    game.id === gameId ? { ...game, rating } : game
+  );
+};
+
+
+// ==================== UPDATE GAME NOTES ====================
+const updateGameNotes = (games, gameId, notes) => {
+  if (!APP_CONFIG.FEATURES.ENABLE_NOTES) {
+    return games;
+  }
+  
+  // Validate notes length
+  const trimmedNotes = notes.trim();
+  if (trimmedNotes.length > APP_CONFIG.VALIDATION.MAX_NOTES_LENGTH) {
+    alert(`Notes too long! Maximum ${APP_CONFIG.VALIDATION.MAX_NOTES_LENGTH} characters.`);
+    return games;
+  }
+  
+  return games.map(game => 
+    game.id === gameId ? { ...game, notes: trimmedNotes } : game
+  );
+};
+
+
+// ==================== DELETE GAME ====================
+const deleteGame = (games, gameId) => {
+  if (!APP_CONFIG.FEATURES.ENABLE_DELETE_GAME) {
+    return games;
+  }
+  
+  // Don't allow deleting default games (id < 1000)
+  const game = games.find(g => g.id === gameId);
+  if (game && game.id < 1000) {
+    alert('Cannot delete default games!');
+    return games;
+  }
+  
+  if (!window.confirm(`Delete "${game.name}"? This cannot be undone.`)) {
+    return games;
+  }
+  
+  return games.filter(g => g.id !== gameId);
+};
+
+
+// ==================== ADD NEW GAME ====================
+const addNewGame = (games, newGameData) => {
+  if (!APP_CONFIG.FEATURES.ENABLE_ADD_GAME) {
+    console.error('Add game feature is disabled');
+    return games;
+  }
+  
+  // Validate required fields
+  if (!newGameData.name || !newGameData.name.trim()) {
+    alert('Game name is required!');
+    return games;
+  }
+  
+  if (newGameData.name.length > APP_CONFIG.VALIDATION.MAX_GAME_NAME_LENGTH) {
+    alert(`Game name too long! Maximum ${APP_CONFIG.VALIDATION.MAX_GAME_NAME_LENGTH} characters.`);
+    return games;
+  }
+  
+  // Create new game object
+  const newGame = {
+    id: Date.now(), // Use timestamp as unique ID
+    name: newGameData.name.trim(),
+    genre: newGameData.genre.trim() || 'Unknown',
+    fps: newGameData.fps.trim() || 'N/A',
+    tier: newGameData.tier || APP_CONFIG.DEFAULTS.NEW_GAME.tier,
+    priority: newGameData.priority || APP_CONFIG.DEFAULTS.NEW_GAME.priority,
+    trailer: newGameData.trailer.trim() || '',
+    desc: newGameData.desc.trim() || '',
+    hours: newGameData.hours.trim() || '',
+    icon: newGameData.icon || APP_CONFIG.DEFAULTS.NEW_GAME.icon,
+    status: APP_CONFIG.DEFAULTS.NEW_GAME.status,
+    rating: APP_CONFIG.DEFAULTS.NEW_GAME.rating,
+    notes: APP_CONFIG.DEFAULTS.NEW_GAME.notes
+  };
+  
+  console.log('Adding new game:', newGame);
+  return [...games, newGame];
+};
+
+
+// ==================== VALIDATE GAME DATA ====================
+const validateGameData = (gameData) => {
+  const errors = [];
+  
+  // Check name
+  if (!gameData.name || gameData.name.trim().length < APP_CONFIG.VALIDATION.MIN_GAME_NAME_LENGTH) {
+    errors.push('Game name is required');
+  }
+  
+  if (gameData.name && gameData.name.length > APP_CONFIG.VALIDATION.MAX_GAME_NAME_LENGTH) {
+    errors.push(`Game name must be less than ${APP_CONFIG.VALIDATION.MAX_GAME_NAME_LENGTH} characters`);
+  }
+  
+  // Check genre
+  if (gameData.genre && gameData.genre.length > APP_CONFIG.VALIDATION.MAX_GENRE_LENGTH) {
+    errors.push(`Genre must be less than ${APP_CONFIG.VALIDATION.MAX_GENRE_LENGTH} characters`);
+  }
+  
+  // Check description
+  if (gameData.desc && gameData.desc.length > APP_CONFIG.VALIDATION.MAX_DESC_LENGTH) {
+    errors.push(`Description must be less than ${APP_CONFIG.VALIDATION.MAX_DESC_LENGTH} characters`);
+  }
+  
+  // Check trailer URL
+  if (gameData.trailer && !isValidURL(gameData.trailer)) {
+    errors.push('Trailer must be a valid URL');
+  }
+  
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
+};
+
+
+// ==================== VALIDATE URL ====================
+const isValidURL = (string) => {
+  try {
+    new URL(string);
+    return true;
+  } catch (_) {
+    return false;
+  }
+};
+
+
+// ==================== GET NEXT AVAILABLE ID ====================
+const getNextGameId = (games) => {
+  if (games.length === 0) return 1000;
+  
+  const maxId = Math.max(...games.map(g => g.id));
+  return maxId < 1000 ? 1000 : maxId + 1;
+};
+
+
+// Make all functions available globally
+window.GameFeatures = {
+  searchGames,
+  filterGames,
+  sortGames,
+  calculateStats,
+  updateGameStatus,
+  updateGameRating,
+  updateGameNotes,
+  deleteGame,
+  addNewGame,
+  validateGameData,
+  isValidURL,
+  getNextGameId
+};
+
+/*
+  ============================================
+  HOW TO USE THESE FUNCTIONS:
+  ============================================
+  
+  Import in your app:
+  const { searchGames, filterGames, sortGames } = window.GameFeatures;
+  
+  Search games:
+  const filtered = searchGames(games, 'batman');
+  
+  Filter by status:
+  const filtered = filterGames(games, 'completed');
+  
+  Sort games:
+  const sorted = sortGames(games, 'name');
+  
+  Calculate stats:
+  const stats = calculateStats(games);
+  
+  Update status:
+  const updated = updateGameStatus(games, gameId);
+  
+  Update rating:
+  const updated = updateGameRating(games, gameId, 5);
+  
+  Update notes:
+  const updated = updateGameNotes(games, gameId, 'Great game!');
+  
+  Delete game:
+  const updated = deleteGame(games, gameId);
+  
+  Add new game:
+  const newGameData = { name: 'New Game', genre: 'Action', ... };
+  const updated = addNewGame(games, newGameData);
+  
+  Validate game data:
+  const { isValid, errors } = validateGameData(gameData);
+  if (!isValid) {
+    console.error('Validation errors:', errors);
+  }
+  
+  ============================================
+  COMBINING FUNCTIONS:
+  ============================================
+  
+  Apply search, filter, and sort together:
+  
+  let result = games;
+  result = searchGames(result, searchTerm);
+  result = filterGames(result, filter);
+  result = sortGames(result, sortBy);
+  
+  ============================================
+  CUSTOMIZATION:
+  ============================================
+  
+  Add new search fields:
+  - Edit searchGames() function
+  - Add more checks (e.g., search by hours, tier, etc.)
+  
+  Add new sort options:
+  - Edit sortGames() function
+  - Add new case in switch statement
+  
+  Change validation rules:
+  - Edit validateGameData() function
+  - Modify error messages and conditions
+  
+  Add new features:
+  - Create new function following same pattern
+  - Add to window.GameFeatures export
+  - Use in app.js
+  
+  ============================================
+*/
+/*
+  ============================================
+  GAME SEARCH & AUTO-FILL
+  ============================================
+  
+  This file searches the internet for game information
+  and auto-fills the add game form.
+  
+  USES:
+  - RAWG API (free, no key needed for basic use)
+  - YouTube Data API (searches for trailers)
+  - HowLongToBeat (estimated hours)
+  
+  ============================================
+*/
+
+const GameSearch = {
+  
+  // ==================== SEARCH FOR GAME ====================
+  searchGame: async function(gameName) {
+    if (!gameName || gameName.trim().length < 2) {
+      return {
+        success: false,
+        error: 'Please enter a game name (at least 2 characters)'
+      };
+    }
+    
+    try {
+      console.log('🔍 Searching for:', gameName);
+      
+      // Search using RAWG API (free, no key needed)
+      const searchUrl = `https://api.rawg.io/api/games?search=${encodeURIComponent(gameName)}&page_size=5`;
+      
+      const response = await fetch(searchUrl);
+      
+      if (!response.ok) {
+        throw new Error('Search failed');
+      }
+      
+      const data = await response.json();
+      
+      if (!data.results || data.results.length === 0) {
+        return {
+          success: false,
+          error: 'No games found. Try a different name.'
+        };
+      }
+      
+      // Return multiple results for user to choose
+      const games = data.results.map(game => ({
+        id: game.id,
+        name: game.name,
+        released: game.released,
+        rating: game.rating,
+        image: game.background_image,
+        genres: game.genres?.map(g => g.name).join(', ') || 'Unknown',
+        platforms: game.platforms?.map(p => p.platform.name).join(', ') || ''
+      }));
+      
+      return {
+        success: true,
+        games: games
+      };
+      
+    } catch (error) {
+      console.error('Search error:', error);
+      return {
+        success: false,
+        error: 'Search failed. Please check your internet connection.'
+      };
+    }
+  },
+  
+  
+  // ==================== GET DETAILED GAME INFO ====================
+  getGameDetails: async function(gameId) {
+    try {
+      console.log('📊 Fetching details for game ID:', gameId);
+      
+      // Get detailed info from RAWG
+      const detailsUrl = `https://api.rawg.io/api/games/${gameId}`;
+      const response = await fetch(detailsUrl);
+      
+      if (!response.ok) {
+        throw new Error('Failed to get game details');
+      }
+      
+      const game = await response.json();
+      
+      // Extract relevant information
+      const gameData = {
+        name: game.name,
+        genre: game.genres?.map(g => g.name).join(', ') || 'Unknown',
+        desc: game.description_raw ? 
+              game.description_raw.substring(0, 300) + '...' : 
+              'No description available',
+        released: game.released,
+        rating: game.rating,
+        image: game.background_image,
+        metacritic: game.metacritic,
+        playtime: game.playtime ? `${game.playtime} hours` : null,
+        platforms: game.platforms?.map(p => p.platform.name).join(', ') || '',
+        esrb: game.esrb_rating?.name || 'Not Rated'
+      };
+      
+      // Search for YouTube trailer
+      const trailer = await this.searchYouTubeTrailer(game.name);
+      if (trailer) {
+        gameData.trailer = trailer;
+      }
+      
+      // Estimate hours to beat based on playtime
+      if (game.playtime && game.playtime > 0) {
+        gameData.hours = `${game.playtime}-${game.playtime + 5}`;
+      }
+      
+      // Generate emoji icon based on genre
+      gameData.icon = this.getEmojiForGenre(game.genres?.[0]?.name || '');
+      
+      // Estimate FPS based on age and type
+      gameData.fps = this.estimateFPS(game);
+      
+      // Determine tier (basic heuristic)
+      gameData.tier = this.determineTier(game);
+      
+      return {
+        success: true,
+        data: gameData
+      };
+      
+    } catch (error) {
+      console.error('Error getting game details:', error);
+      return {
+        success: false,
+        error: 'Failed to get game details'
+      };
+    }
+  },
+  
+  
+  // ==================== SEARCH YOUTUBE TRAILER ====================
+  searchYouTubeTrailer: async function(gameName) {
+    try {
+      // Use YouTube's no-API search (less reliable but works without key)
+      const searchQuery = encodeURIComponent(`${gameName} official trailer gameplay`);
+      const youtubeSearchUrl = `https://www.youtube.com/results?search_query=${searchQuery}`;
+      
+      // For now, return a search URL that user can click
+      // In a full implementation, you'd use YouTube Data API with a key
+      return `https://www.youtube.com/results?search_query=${searchQuery}`;
+      
+    } catch (error) {
+      console.error('YouTube search error:', error);
+      return null;
+    }
+  },
+  
+  
+  // ==================== GET EMOJI FOR GENRE ====================
+  getEmojiForGenre: function(genre) {
+    const emojiMap = {
+      'Action': '⚔️',
+      'Adventure': '🗺️',
+      'RPG': '🎭',
+      'Strategy': '🧠',
+      'Shooter': '🔫',
+      'Racing': '🏎️',
+      'Sports': '⚽',
+      'Puzzle': '🧩',
+      'Platformer': '🏃',
+      'Fighting': '🥊',
+      'Horror': '👻',
+      'Simulation': '✈️',
+      'MMORPG': '🗡️',
+      'Indie': '🎨',
+      'Casual': '🎮',
+      'Family': '👨‍👩‍👧‍👦',
+      'Educational': '📚',
+      'Card': '🃏',
+      'Board Games': '🎲'
+    };
+    
+    for (const [key, emoji] of Object.entries(emojiMap)) {
+      if (genre.includes(key)) {
+        return emoji;
+      }
+    }
+    
+    return '🎮'; // Default
+  },
+  
+  
+  // ==================== ESTIMATE FPS ====================
+  estimateFPS: function(game) {
+    const releaseYear = game.released ? parseInt(game.released.split('-')[0]) : 2020;
+    const currentYear = new Date().getFullYear();
+    const age = currentYear - releaseYear;
+    
+    // Newer games = lower FPS on your system
+    if (age <= 2) {
+      return '20-30';
+    } else if (age <= 5) {
+      return '30-45';
+    } else if (age <= 8) {
+      return '40-55';
+    } else {
+      return '50-60';
+    }
+  },
+  
+  
+  // ==================== DETERMINE TIER ====================
+  determineTier: function(game) {
+    // Use metacritic score to suggest tier
+    const score = game.metacritic || game.rating * 20;
+    
+    if (score >= 90) return 'S';
+    if (score >= 80) return 'A';
+    if (score >= 70) return 'B';
+    return 'C';
+  },
+  
+  
+  // ==================== DOWNLOAD IMAGE ====================
+  downloadImage: async function(imageUrl) {
+    try {
+      // Convert image URL to base64 for storage
+      // Note: This might have CORS issues with some images
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+      
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    } catch (error) {
+      console.error('Error downloading image:', error);
+      return null;
+    }
+  }
+  
+};
+
+// Make available globally
+window.GameSearch = GameSearch;
+
+/*
+  ============================================
+  HOW TO USE:
+  ============================================
+  
+  1. SEARCH FOR GAMES:
+  
+  const result = await GameSearch.searchGame('Batman Arkham');
+  if (result.success) {
+    // result.games = array of matching games
+    // Show user list to choose from
+  }
+  
+  2. GET DETAILED INFO:
+  
+  const details = await GameSearch.getGameDetails(gameId);
+  if (details.success) {
+    // details.data contains all game info
+    // Auto-fill form with this data
+  }
+  
+  ============================================
+  INTEGRATION EXAMPLE:
+  ============================================
+  
+  In your add game form:
+  
+  1. User types game name
+  2. User clicks "Search" button
+  3. Call GameSearch.searchGame(name)
+  4. Show list of results
+  5. User selects one
+  6. Call GameSearch.getGameDetails(selectedId)
+  7. Auto-fill form fields
+  8. User can edit if needed
+  9. Save game
+  
+  ============================================
+  API LIMITATIONS:
+  ============================================
+  
+  RAWG API (Free tier):
+  - 20,000 requests/month
+  - No API key required for basic use
+  - Rate limited to 20 requests/second
+  
+  If you need more:
+  - Sign up at rawg.io/apidocs
+  - Get free API key
+  - Add to requests: ?key=YOUR_KEY
+  
+  ============================================
+  ALTERNATIVE APIS:
+  ============================================
+  
+  If RAWG doesn't work:
+  
+  1. IGDB (Twitch):
+     - More detailed data
+     - Requires free API key
+     - api.igdb.com
+  
+  2. Giant Bomb:
+     - Comprehensive database
+     - Requires free API key
+     - giantbomb.com/api
+  
+  3. Steam API:
+     - Only for Steam games
+     - Free, no key needed
+     - store.steampowered.com/api
+  
+  ============================================
+  TROUBLESHOOTING:
+  ============================================
+  
+  "No games found":
+  - Try different search term
+  - Check spelling
+  - Try shorter name (just main title)
+  
+  "Search failed":
+  - Check internet connection
+  - API might be down
+  - Try again in a moment
+  
+  "CORS error":
+  - This is normal in local testing
+  - Will work fine when deployed
+  - Or use CORS proxy for testing
+  
+  ============================================
+*/
+/*
+  ============================================
+  MAIN APP FILE
+  ============================================
+  
+  This is the heart of the application.
+  It brings together all the other modules and
+  manages the overall app state.
+  
+  DEPENDENCIES (loaded before this file):
+  - config.js
+  - data.js
+  - storage.js
+  - icons.js
+  - ui-components.js
+  - game-card.js
+  - features.js
+  
+  ============================================
+*/
+
+const { useState, useEffect } = React;
+
+// ==================== MAIN APP COMPONENT ====================
+const GamingChecklistApp = () => {
+  
+  // ========== STATE MANAGEMENT ==========
+  
+  // Games list (main data)
+  const [games, setGames] = useState(() => StorageManager.loadGames());
+  
+  // Dark mode
+  const [darkMode, setDarkMode] = useState(() => StorageManager.loadDarkMode());
+  
+  // UI state
+  const [expandedGameId, setExpandedGameId] = useState(null);
+  const [filter, setFilter] = useState(APP_CONFIG.DEFAULTS.FILTER);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState(APP_CONFIG.DEFAULTS.SORT_BY);
+  const [showSort, setShowSort] = useState(false);
+  const [showAddGame, setShowAddGame] = useState(false);
+  
+  // New game form state
+  const [newGame, setNewGame] = useState({
+    name: '',
+    genre: '',
+    fps: '',
+    tier: APP_CONFIG.DEFAULTS.NEW_GAME.tier,
+    priority: APP_CONFIG.DEFAULTS.NEW_GAME.priority,
+    trailer: '',
+    desc: '',
+    hours: '',
+    icon: APP_CONFIG.DEFAULTS.NEW_GAME.icon
+  });
+  
+  // Search state
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchResults, setSearchResults] = useState([]);
+  const [showSearchResults, setShowSearchResults] = useState(false);
+  
+  
+  // ========== EFFECTS ==========
+  
+  // Save games whenever they change
+  useEffect(() => {
+    StorageManager.saveGames(games);
+  }, [games]);
+  
+  // Save dark mode whenever it changes
+  useEffect(() => {
+    StorageManager.saveDarkMode(darkMode);
+  }, [darkMode]);
+  
+  // Hide loading screen on mount
+  useEffect(() => {
+    const loadingScreen = document.getElementById('loadingScreen');
+    if (loadingScreen) {
+      setTimeout(() => {
+        loadingScreen.classList.add('hide');
+      }, APP_CONFIG.UI.LOADING_MIN_TIME);
+    }
+  }, []);
+  
+  
+  // ========== COMPUTED VALUES ==========
+  
+  // Apply search, filter, and sort
+  let displayedGames = games;
+  displayedGames = GameFeatures.searchGames(displayedGames, searchTerm);
+  displayedGames = GameFeatures.filterGames(displayedGames, filter);
+  displayedGames = GameFeatures.sortGames(displayedGames, sortBy);
+  
+  // Calculate statistics
+  const stats = GameFeatures.calculateStats(games);
+  
+  // Theme classes
+  const bgClass = darkMode 
+    ? 'bg-gradient-to-br from-gray-900 via-indigo-900 to-purple-900' 
+    : 'bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900';
+  
+  
+  // ========== EVENT HANDLERS ==========
+  
+  // Toggle game expansion
+  const handleToggleExpand = (gameId) => {
+    setExpandedGameId(expandedGameId === gameId ? null : gameId);
+  };
+  
+  // Update game status
+  const handleUpdateStatus = (gameId) => {
+    const updated = GameFeatures.updateGameStatus(games, gameId);
+    setGames(updated);
+  };
+  
+  // Update game rating
+  const handleUpdateRating = (gameId, rating) => {
+    const updated = GameFeatures.updateGameRating(games, gameId, rating);
+    setGames(updated);
+  };
+  
+  // Update game notes
+  const handleUpdateNotes = (gameId, notes) => {
+    const updated = GameFeatures.updateGameNotes(games, gameId, notes);
+    setGames(updated);
+  };
+  
+  // Delete game
+  const handleDeleteGame = (gameId) => {
+    const updated = GameFeatures.deleteGame(games, gameId);
+    setGames(updated);
+    if (expandedGameId === gameId) {
+      setExpandedGameId(null);
+    }
+  };
+  
+  // Add new game
+  const handleAddGame = (e) => {
+    e.preventDefault();
+    
+    // Validate
+    const validation = GameFeatures.validateGameData(newGame);
+    if (!validation.isValid) {
+      alert('Validation errors:\n' + validation.errors.join('\n'));
+      return;
+    }
+    
+    // Add game
+    const updated = GameFeatures.addNewGame(games, newGame);
+    setGames(updated);
+    
+    // Reset form
+    setNewGame({
+      name: '',
+      genre: '',
+      fps: '',
+      tier: APP_CONFIG.DEFAULTS.NEW_GAME.tier,
+      priority: APP_CONFIG.DEFAULTS.NEW_GAME.priority,
+      trailer: '',
+      desc: '',
+      hours: '',
+      icon: APP_CONFIG.DEFAULTS.NEW_GAME.icon
     });
+    
+    setShowAddGame(false);
+  };
+  
+  // Handle new game form input
+  const handleNewGameChange = (field, value) => {
+    setNewGame(prev => ({ ...prev, [field]: value }));
+  };
+  
+  // Search for game information
+  const handleSearchGame = async () => {
+    if (!newGame.name || newGame.name.trim().length < 2) {
+      alert('Please enter a game name (at least 2 characters)');
+      return;
+    }
+    
+    setIsSearching(true);
+    setShowSearchResults(false);
+    
+    const result = await GameSearch.searchGame(newGame.name);
+    
+    setIsSearching(false);
+    
+    if (result.success) {
+      setSearchResults(result.games);
+      setShowSearchResults(true);
+    } else {
+      alert(result.error);
+    }
+  };
+  
+  // Select game from search results
+  const handleSelectGame = async (gameId, gameName) => {
+    setIsSearching(true);
+    setShowSearchResults(false);
+    
+    const result = await GameSearch.getGameDetails(gameId);
+    
+    setIsSearching(false);
+    
+    if (result.success) {
+      const data = result.data;
+      
+      // Auto-fill form
+      setNewGame({
+        name: data.name,
+        genre: data.genre,
+        fps: data.fps || '30-60',
+        tier: data.tier || 'C',
+        priority: 'MEDIUM',
+        trailer: data.trailer || '',
+        desc: data.desc || '',
+        hours: data.hours || '',
+        icon: data.icon || '🎮'
+      });
+      
+      alert('✅ Game information loaded! You can edit any field before saving.');
+    } else {
+      alert('Failed to load game details: ' + result.error);
+    }
+  };
+  
+  // Export data
+  const handleExport = () => {
+    StorageManager.exportToFile(games);
+  };
+  
+  // Import data
+  const handleImport = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      StorageManager.importFromFile(file, (imported) => {
+        if (window.confirm(`Import ${imported.length} games? This will replace your current list.`)) {
+          setGames(imported);
+        }
+      });
+    }
+    // Reset file input
+    e.target.value = '';
+  };
+  
+  
+  // ========== RENDER ==========
+  
+  const { 
+    Header, 
+    StatsCards, 
+    FilterButtons, 
+    SearchBar, 
+    BackupButtons,
+    EmptyState,
+    Legend,
+    Footer
+  } = window.UIComponents;
+  
+  return (
+    <div className={`min-h-screen ${bgClass} p-3 transition-colors duration-300`}>
+      <div className="max-w-4xl mx-auto">
+        
+        {/* Header with progress bar */}
+        <Header 
+          darkMode={darkMode} 
+          setDarkMode={setDarkMode} 
+          stats={stats} 
+        />
+        
+        {/* Search bar with sort */}
+        <SearchBar 
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          showSort={showSort}
+          setShowSort={setShowSort}
+          darkMode={darkMode}
+        />
+        
+        {/* Sort options (appears when showSort is true) */}
+        {showSort && APP_CONFIG.FEATURES.ENABLE_SORTING && (
+          <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-xl p-3 mb-4`}>
+            <div className="flex gap-2 flex-wrap">
+              {[
+                ['tier', 'By Tier'],
+                ['name', 'By Name'],
+                ['fps', 'By FPS'],
+                ['rating', 'By Rating']
+              ].map(([key, label]) => (
+                <button
+                  key={key}
+                  onClick={() => setSortBy(key)}
+                  className={`px-3 py-1 rounded text-sm transition-colors ${
+                    sortBy === key 
+                      ? 'bg-purple-600 text-white' 
+                      : darkMode 
+                        ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+        
+        {/* Stats cards */}
+        <StatsCards stats={stats} darkMode={darkMode} />
+        
+        {/* Filter buttons */}
+        <FilterButtons 
+          filter={filter}
+          setFilter={setFilter}
+          stats={stats}
+          darkMode={darkMode}
+        />
+        
+        {/* Backup buttons */}
+        <BackupButtons 
+          onExport={handleExport}
+          onImport={handleImport}
+          darkMode={darkMode}
+        />
+        
+        {/* Add game button/form */}
+        {APP_CONFIG.FEATURES.ENABLE_ADD_GAME && (
+          <div className="mb-4">
+            {!showAddGame ? (
+              <button
+                onClick={() => setShowAddGame(true)}
+                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl p-4 font-bold shadow-xl flex items-center justify-center gap-2 hover:from-purple-700 hover:to-pink-700 transition-all"
+              >
+                <Icon name="plus" size={20} /> Add New Game
+              </button>
+            ) : (
+              <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-xl p-4`}>
+                <form onSubmit={handleAddGame} className="space-y-3">
+                  <div className="flex justify-between items-center mb-2">
+                    <h3 className={`font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+                      Add New Game
+                    </h3>
+                    <button 
+                      type="button" 
+                      onClick={() => setShowAddGame(false)}
+                      className="text-gray-500 hover:text-gray-700"
+                    >
+                      ❌
+                    </button>
+                  </div>
+                  
+                  {/* Search Section */}
+                  <div className="bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900 dark:to-pink-900 p-3 rounded-lg">
+                    <label className={`block text-sm font-medium mb-2 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+                      🔍 Search for Game Information
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="Type game name..."
+                        value={newGame.name}
+                        onChange={e => handleNewGameChange('name', e.target.value)}
+                        className={`flex-1 p-2 border rounded ${darkMode ? 'bg-gray-700 text-white border-gray-600' : 'border-gray-300'}`}
+                        disabled={isSearching}
+                      />
+                      <button
+                        type="button"
+                        onClick={handleSearchGame}
+                        disabled={isSearching || !newGame.name}
+                        className={`px-4 py-2 rounded font-bold transition-colors ${
+                          isSearching || !newGame.name
+                            ? 'bg-gray-400 cursor-not-allowed'
+                            : 'bg-blue-500 hover:bg-blue-600 text-white'
+                        }`}
+                      >
+                        {isSearching ? '⏳ Searching...' : '🔍 Search'}
+                      </button>
+                    </div>
+                    <p className="text-xs mt-2 opacity-75">
+                      Click Search to auto-fill game details from the internet
+                    </p>
+                  </div>
+                  
+                  {/* Search Results */}
+                  {showSearchResults && searchResults.length > 0 && (
+                    <div className={`p-3 rounded-lg border ${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-300'}`}>
+                      <p className={`text-sm font-medium mb-2 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+                        Select a game:
+                      </p>
+                      <div className="space-y-2 max-h-60 overflow-y-auto">
+                        {searchResults.map(game => (
+                          <button
+                            key={game.id}
+                            type="button"
+                            onClick={() => handleSelectGame(game.id, game.name)}
+                            className={`w-full text-left p-2 rounded transition-colors ${
+                              darkMode 
+                                ? 'bg-gray-600 hover:bg-gray-500' 
+                                : 'bg-white hover:bg-gray-100'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2">
+                              {game.image && (
+                                <img 
+                                  src={game.image} 
+                                  alt={game.name}
+                                  className="w-12 h-12 object-cover rounded"
+                                  onError={(e) => e.target.style.display = 'none'}
+                                />
+                              )}
+                              <div className="flex-1">
+                                <p className={`font-medium ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+                                  {game.name}
+                                </p>
+                                <p className="text-xs opacity-75">
+                                  {game.released} • {game.genres}
+                                </p>
+                              </div>
+                              {game.rating && (
+                                <div className="text-yellow-500">
+                                  ⭐ {game.rating}
+                                </div>
+                              )}
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setShowSearchResults(false)}
+                        className="w-full mt-2 text-sm text-gray-500 hover:text-gray-700"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  )}
+                  
+                  {/* Manual Entry Section */}
+                  <div className={`p-2 rounded ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
+                    <p className="text-xs opacity-75 mb-2">
+                      Or enter manually (all fields are editable):
+                    </p>
+                  
+                    <p className="text-xs opacity-75 mb-2">
+                      Or enter manually (all fields are editable):
+                    </p>
+                  
+                  <div className="grid grid-cols-2 gap-2">
+                    <input
+                      type="text"
+                      placeholder="Genre"
+                      value={newGame.genre}
+                      onChange={e => handleNewGameChange('genre', e.target.value)}
+                      className={`w-full p-2 border rounded text-sm ${darkMode ? 'bg-gray-700 text-white border-gray-600' : 'border-gray-300'}`}
+                    />
+                    <input
+                      type="text"
+                      placeholder="FPS (e.g. 30-40)"
+                      value={newGame.fps}
+                      onChange={e => handleNewGameChange('fps', e.target.value)}
+                      className={`w-full p-2 border rounded text-sm ${darkMode ? 'bg-gray-700 text-white border-gray-600' : 'border-gray-300'}`}
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-2">
+                    <input
+                      type="text"
+                      placeholder="Hours (e.g. 10-12)"
+                      value={newGame.hours}
+                      onChange={e => handleNewGameChange('hours', e.target.value)}
+                      className={`w-full p-2 border rounded text-sm ${darkMode ? 'bg-gray-700 text-white border-gray-600' : 'border-gray-300'}`}
+                    />
+                    <input
+                      type="text"
+                      placeholder="Icon (emoji)"
+                      value={newGame.icon}
+                      onChange={e => handleNewGameChange('icon', e.target.value)}
+                      className={`w-full p-2 border rounded text-sm ${darkMode ? 'bg-gray-700 text-white border-gray-600' : 'border-gray-300'}`}
+                    />
+                  </div>
+                  
+                  <select
+                    value={newGame.tier}
+                    onChange={e => handleNewGameChange('tier', e.target.value)}
+                    className={`w-full p-2 border rounded text-sm ${darkMode ? 'bg-gray-700 text-white border-gray-600' : 'border-gray-300'}`}
+                  >
+                    {Object.keys(APP_CONFIG.TIERS).map(tier => (
+                      <option key={tier} value={tier}>
+                        {tier} - {APP_CONFIG.TIERS[tier].label}
+                      </option>
+                    ))}
+                  </select>
+                  
+                  <input
+                    type="url"
+                    placeholder="YouTube Trailer URL"
+                    value={newGame.trailer}
+                    onChange={e => handleNewGameChange('trailer', e.target.value)}
+                    className={`w-full p-2 border rounded text-sm ${darkMode ? 'bg-gray-700 text-white border-gray-600' : 'border-gray-300'}`}
+                  />
+                  
+                  <textarea
+                    placeholder="Description"
+                    value={newGame.desc}
+                    onChange={e => handleNewGameChange('desc', e.target.value)}
+                    className={`w-full p-2 border rounded text-sm ${darkMode ? 'bg-gray-700 text-white border-gray-600' : 'border-gray-300'}`}
+                    rows="2"
+                  />
+                  
+                  <div className="flex gap-2">
+                    <button type="submit" className="flex-1 bg-green-500 text-white p-2 rounded font-bold hover:bg-green-600 transition-colors">
+                      Save Game
+                    </button>
+                    <button type="button" onClick={() => setShowAddGame(false)} className="flex-1 bg-gray-300 text-gray-700 p-2 rounded font-bold hover:bg-gray-400 transition-colors">
+                      Cancel
+                    </button>
+                  </div>
+                  </div>
+                </form>
+              </div>
+            )}
+          </div>
+        )}
+        
+        {/* Game list */}
+        <div className="space-y-3">
+          {displayedGames.length > 0 ? (
+            displayedGames.map(game => (
+              <GameCard
+                key={game.id}
+                game={game}
+                darkMode={darkMode}
+                isExpanded={expandedGameId === game.id}
+                onToggleExpand={() => handleToggleExpand(game.id)}
+                onUpdateStatus={handleUpdateStatus}
+                onUpdateRating={handleUpdateRating}
+                onUpdateNotes={handleUpdateNotes}
+                onDelete={handleDeleteGame}
+              />
+            ))
+          ) : (
+            <EmptyState 
+              darkMode={darkMode}
+              searchTerm={searchTerm}
+              filter={filter}
+            />
+          )}
+        </div>
+        
+        {/* Legend */}
+        <Legend darkMode={darkMode} />
+        
+        {/* Footer */}
+        <Footer darkMode={darkMode} />
+        
+      </div>
+    </div>
+  );
+};
+
+// ========== RENDER APP ==========
+ReactDOM.render(<GamingChecklistApp />, document.getElementById('root'));
+
+/*
+  ============================================
+  HOW THIS FILE WORKS:
+  ============================================
+  
+  1. Initializes state from localStorage
+  2. Renders all UI components
+  3. Handles user interactions
+  4. Updates state and saves to localStorage
+  5. Re-renders when state changes
+  
+  ============================================
+  CUSTOMIZATION:
+  ============================================
+  
+  Add new state:
+  - const [myState, setMyState] = useState(initialValue);
+  
+  Add new effect:
+  - useEffect(() => { /* code */ }, [dependency]);
+  
+  Add new handler:
+  - const handleMyAction = () => { /* code */ };
+  
+  Modify layout:
+  - Change JSX structure in return statement
+  
+  ============================================
+*/
   </script>
-  <script src="js/pwa-init.js" defer></script>
+
+  <script>
+    // PWA init - runs after React is ready
+    (function() {
+      'use strict';
+      var deferredPrompt = null;
+
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('service-worker.js')
+            .then(function(reg) { console.log('SW registered'); })
+            .catch(function(err) { console.log('SW failed:', err); });
+        });
+      }
+
+      window.addEventListener('beforeinstallprompt', function(e) {
+        e.preventDefault();
+        deferredPrompt = e;
+        var dismissed = localStorage.getItem('installPromptDismissed');
+        var daysSince = dismissed ? (Date.now() - parseInt(dismissed)) / 86400000 : 999;
+        if (daysSince > 7) {
+          setTimeout(function() {
+            var el = document.getElementById('installPrompt');
+            if (el) el.classList.add('show');
+          }, 3000);
+        }
+      });
+
+      document.addEventListener('click', function(e) {
+        if (e.target.id === 'installBtn' && deferredPrompt) {
+          deferredPrompt.prompt();
+          deferredPrompt.userChoice.then(function() { deferredPrompt = null; });
+          var el = document.getElementById('installPrompt');
+          if (el) el.classList.remove('show');
+        }
+        if (e.target.id === 'dismissBtn') {
+          var el = document.getElementById('installPrompt');
+          if (el) el.classList.remove('show');
+          localStorage.setItem('installPromptDismissed', Date.now().toString());
+        }
+      });
+    })();
+  </script>
 </body>
 </html>
-
-<!--
-  ============================================
-  WHAT THIS FILE DOES:
-  ============================================
-  
-  1. Sets up the page structure
-  2. Loads external libraries (React, Tailwind)
-  3. Loads all your custom JavaScript files IN ORDER
-  4. Provides the root element for React to render into
-  
-  ============================================
-  HOW TO MODIFY:
-  ============================================
-  
-  - Change app title: Edit <title> tag
-  - Change theme color: Edit <meta name="theme-color">
-  - Add new JS file: Add <script> tag before app.js
-  - Change loading message: Edit text inside #loadingScreen
-  
-  ============================================
-  DEPENDENCIES:
-  ============================================
-  
-  This file needs ALL the js/ files to exist.
-  If any are missing, the app won't work.
-  
-  ============================================
--->
