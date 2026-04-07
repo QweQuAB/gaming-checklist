@@ -94,7 +94,17 @@
   <script type="text/babel" src="js/app.js"></script>
   
   <!-- PWA Registration & Install Prompt -->
-  <script src="js/pwa-init.js"></script>
+  <!-- Deferred so APP_CONFIG is available from Babel scripts -->
+  <script>
+    window.addEventListener('load', function() {
+      // Fallback: hide loading screen after 4s even if React fails
+      setTimeout(function() {
+        var ls = document.getElementById('loadingScreen');
+        if (ls) ls.classList.add('hide');
+      }, 4000);
+    });
+  </script>
+  <script src="js/pwa-init.js" defer></script>
 </body>
 </html>
 

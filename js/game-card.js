@@ -16,8 +16,6 @@
   ============================================
 */
 
-const { useState } = React;
-
 // ==================== MAIN GAME CARD COMPONENT ====================
 const GameCard = ({ 
   game, 
