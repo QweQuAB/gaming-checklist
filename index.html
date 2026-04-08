@@ -273,7 +273,7 @@
           setResults(list.length?list:[{id:'none',name:'No results found — try a different search.',noResult:true}]);
           setSearching(false);
         })
-        .catch(function(e){alert(e.message||'Search failed. Check internet connection.');setSearching(false);});
+        .catch(function(e){alert('Search error: '+(e.message||'Unknown error. Check console for details.'));setSearching(false);});
     }
 
     function selectGame(id){
@@ -300,7 +300,7 @@
           });
           setSearching(false);
         })
-        .catch(function(){alert('Failed to load details.');setSearching(false);});
+        .catch(function(e){alert('Details error: '+(e.message||'Unknown'));setSearching(false);});
     }
 
     function submit(e){
