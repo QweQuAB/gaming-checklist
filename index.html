@@ -29,9 +29,13 @@
     #installBtn{background:white;color:#764ba2}
     #dismissBtn{background:rgba(255,255,255,.2);color:white}
     @keyframes spin{to{transform:rotate(360deg)}}
-    ::-webkit-scrollbar{width:8px}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+    .animate-pulse{animation:pulse 1.5s ease-in-out infinite}
+    ::-webkit-scrollbar{width:6px}
     ::-webkit-scrollbar-track{background:rgba(0,0,0,.1);border-radius:10px}
     ::-webkit-scrollbar-thumb{background:rgba(124,58,237,.5);border-radius:10px}
+    .sidebar-scroll{overflow-y:auto;max-height:calc(100vh - 120px)}
+    @media(min-width:1024px){.sidebar-scroll{position:sticky;top:12px}}
   </style>
 </head>
 <body>
@@ -57,44 +61,43 @@
 
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-
   <script>
   'use strict';
+
+  var RAWG_KEY = 'c2ad28b9e8594e72bf24b87c05bc84c7';
+  function rawg(path){ return fetch('https://api.rawg.io/api/'+path+(path.includes('?')?'&':'?')+'key='+RAWG_KEY).then(function(r){return r.json();}); }
 
   function hideLoader(){ var e=document.getElementById('loadingScreen'); if(e) e.classList.add('hide'); }
   window.addEventListener('error', function(){ setTimeout(hideLoader,500); });
 
-  // CONFIG
   var CFG = {
-    APP_NAME:"Q's Gaming Checklist", APP_VERSION:"1.0.0", APP_AUTHOR:"Q",
-    STORE_KEY:'gameChecklistData', DARK_KEY:'darkMode',
-    STATUS_CYCLE:['not_downloaded','downloaded','playing','completed','favorite'],
+    APP_NAME:"Q's Gaming Checklist", APP_VERSION:"2.0.0", APP_AUTHOR:"Q",
+    STORE_KEY:'gameChecklistData', DARK_KEY:'darkMode', IMG_KEY:'gameCoverCache',
     TIERS:{ S:{label:'MUST PLAY',color:'bg-red-500'}, A:{label:'EXCELLENT',color:'bg-orange-500'}, B:{label:'WORTH IT',color:'bg-yellow-500'}, C:{label:'CLASSICS',color:'bg-green-500'}, R:{label:'RACING',color:'bg-blue-500'} },
     TIER_ORDER:{S:0,A:1,B:2,C:3,R:4}
   };
 
-  // GAME DATA
   var GAMES_DEFAULT = [
-    {id:1, name:"Batman: Arkham City",        genre:"Action-Adventure",    fps:"45-60",tier:"S",priority:"HIGH",       trailer:"https://youtu.be/9pnK8akbd2M",desc:"Become the Dark Knight in an open-world Gotham prison.",hours:"12-15",icon:"🦇"},
-    {id:2, name:"Deus Ex: Human Revolution",  genre:"RPG/Stealth",         fps:"50-60",tier:"S",priority:"HIGH",       trailer:"https://youtu.be/Kq5KWLqUewc",desc:"Cyberpunk RPG where your choices matter.",hours:"20-25",icon:"🤖"},
-    {id:3, name:"The Witcher 2",              genre:"Fantasy RPG",         fps:"40-50",tier:"S",priority:"HIGH",       trailer:"https://youtu.be/YJ_KFwNLpl0",desc:"Hunt monsters as Geralt in this dark fantasy.",hours:"25-30",icon:"⚔️"},
-    {id:4, name:"Spec Ops: The Line",         genre:"Third-Person Shooter",fps:"50-60",tier:"S",priority:"HIGH",       trailer:"https://youtu.be/3uUsdBfG6o0",desc:"Military shooter exploring war's psychological horrors.",hours:"6-8",icon:"🎖️"},
-    {id:5, name:"Metro: Last Light Redux",    genre:"FPS/Horror",          fps:"35-45",tier:"S",priority:"HIGH",       trailer:"https://youtu.be/8jcIYP8LpxA",desc:"Survive post-apocalyptic Moscow metro tunnels.",hours:"10-12",icon:"🚇"},
-    {id:6, name:"Dishonored",                genre:"Stealth/Action",      fps:"50-60",tier:"S",priority:"HIGH",       trailer:"https://youtu.be/E1HlYTukh9A",desc:"Supernatural assassin with choice-based gameplay.",hours:"12-15",icon:"🗡️"},
-    {id:7, name:"Tomb Raider (2013)",         genre:"Action-Adventure",    fps:"45-55",tier:"S",priority:"HIGH",       trailer:"https://youtu.be/xCe8-1dbXZc",desc:"Lara Croft's origin story on a dangerous island.",hours:"11-14",icon:"🏹"},
-    {id:43,name:"Mass Effect (Legendary)",    genre:"Sci-Fi RPG",          fps:"40-50",tier:"S",priority:"HIGH",       trailer:"https://youtu.be/n8i53TtQ6IQ",desc:"Command Shepard and save the galaxy.",hours:"17-20",icon:"🚀"},
-    {id:44,name:"Mass Effect 2 (Legendary)",  genre:"Sci-Fi RPG",          fps:"45-55",tier:"S",priority:"HIGH",       trailer:"https://youtu.be/lx9sPQpjgjU",desc:"Assemble a team for a suicide mission.",hours:"24-30",icon:"🚀"},
-    {id:45,name:"Mass Effect 3 (Legendary)",  genre:"Sci-Fi RPG",          fps:"40-50",tier:"S",priority:"HIGH",       trailer:"https://youtu.be/eBktyyaV9LY",desc:"Final battle against the Reapers.",hours:"24-30",icon:"🚀"},
-    {id:8, name:"Batman: Arkham Knight",      genre:"Action-Adventure",    fps:"25-35",tier:"A",priority:"MEDIUM-HIGH",trailer:"https://youtu.be/wsf78BS9VE0",desc:"Epic conclusion with the Batmobile.",hours:"15-18",icon:"🦇"},
-    {id:11,name:"Far Cry 3",                  genre:"FPS/Open World",      fps:"40-50",tier:"A",priority:"MEDIUM-HIGH",trailer:"https://youtu.be/ybdiu8iGsZg",desc:"Survive tropical island with insane Vaas.",hours:"15-20",icon:"🏝️"},
-    {id:20,name:"Doom (2016)",                genre:"FPS",                 fps:"45-55",tier:"A",priority:"MEDIUM-HIGH",trailer:"https://youtu.be/NteAPGprDJk",desc:"Rip and tear through demons.",hours:"11-13",icon:"😈"},
-    {id:46,name:"Warhammer 40K: Space Marine",genre:"Third-Person Action", fps:"50-60",tier:"A",priority:"MEDIUM-HIGH",trailer:"https://youtu.be/nb50aAFiOpM",desc:"Battle Orks as an Ultramarine.",hours:"7-9",icon:"⚔️"},
-    {id:47,name:"Hades II",                   genre:"Roguelike",           fps:"45-55",tier:"A",priority:"MEDIUM-HIGH",trailer:"https://youtu.be/CmxOutSzAAA",desc:"Fight through Underworld as Melinoe.",hours:"20-30",icon:"🔱"},
-    {id:31,name:"Sleeping Dogs",              genre:"Open World Action",   fps:"40-50",tier:"C",priority:"LOW-MEDIUM", status:"completed",trailer:"https://youtu.be/virg-5zeC0M",desc:"Undercover in Hong Kong triads.",hours:"15-20",icon:"🐉"},
-    {id:32,name:"Max Payne 3",                genre:"Third-Person Shooter",fps:"40-50",tier:"C",priority:"LOW-MEDIUM", trailer:"https://youtu.be/5MqFhlyGg1U",desc:"Max's final chapter in Sao Paulo.",hours:"8-10",icon:"🔫"},
-    {id:39,name:"NFS: Hot Pursuit Remastered",genre:"Racing",              fps:"50-60",tier:"R",priority:"OPTIONAL",   trailer:"https://youtu.be/qLRy0DjT9J4",desc:"High-speed police chases.",hours:"8-12",icon:"🏎️"},
-    {id:40,name:"GRID 2",                     genre:"Racing",              fps:"50-60",tier:"R",priority:"OPTIONAL",   trailer:"https://youtu.be/KsI1NV6hoDk",desc:"Arcade-sim racing balance.",hours:"10-15",icon:"🏁"},
-    {id:48,name:"The Crew",                   genre:"Racing",              fps:"35-45",tier:"R",priority:"OPTIONAL",   trailer:"https://youtu.be/k9TcSHzEsqQ",desc:"Drive across entire USA.",hours:"20-30",icon:"🗺️"}
+    {id:1, name:"Batman: Arkham City",        genre:"Action-Adventure",    fps:"45-60",tier:"S",trailer:"https://youtu.be/9pnK8akbd2M",desc:"Become the Dark Knight in an open-world Gotham prison.",hours:"12-15",icon:"🦇"},
+    {id:2, name:"Deus Ex: Human Revolution",  genre:"RPG/Stealth",         fps:"50-60",tier:"S",trailer:"https://youtu.be/Kq5KWLqUewc",desc:"Cyberpunk RPG where your choices matter.",hours:"20-25",icon:"🤖"},
+    {id:3, name:"The Witcher 2",              genre:"Fantasy RPG",         fps:"40-50",tier:"S",trailer:"https://youtu.be/YJ_KFwNLpl0",desc:"Hunt monsters as Geralt in this dark fantasy.",hours:"25-30",icon:"⚔️"},
+    {id:4, name:"Spec Ops: The Line",         genre:"Third-Person Shooter",fps:"50-60",tier:"S",trailer:"https://youtu.be/3uUsdBfG6o0",desc:"Military shooter exploring war's psychological horrors.",hours:"6-8",icon:"🎖️"},
+    {id:5, name:"Metro: Last Light Redux",    genre:"FPS/Horror",          fps:"35-45",tier:"S",trailer:"https://youtu.be/8jcIYP8LpxA",desc:"Survive post-apocalyptic Moscow metro tunnels.",hours:"10-12",icon:"🚇"},
+    {id:6, name:"Dishonored",                genre:"Stealth/Action",      fps:"50-60",tier:"S",trailer:"https://youtu.be/E1HlYTukh9A",desc:"Supernatural assassin with choice-based gameplay.",hours:"12-15",icon:"🗡️"},
+    {id:7, name:"Tomb Raider (2013)",         genre:"Action-Adventure",    fps:"45-55",tier:"S",trailer:"https://youtu.be/xCe8-1dbXZc",desc:"Lara Croft's origin story on a dangerous island.",hours:"11-14",icon:"🏹"},
+    {id:43,name:"Mass Effect (Legendary)",    genre:"Sci-Fi RPG",          fps:"40-50",tier:"S",trailer:"https://youtu.be/n8i53TtQ6IQ",desc:"Command Shepard and save the galaxy.",hours:"17-20",icon:"🚀"},
+    {id:44,name:"Mass Effect 2 (Legendary)",  genre:"Sci-Fi RPG",          fps:"45-55",tier:"S",trailer:"https://youtu.be/lx9sPQpjgjU",desc:"Assemble a team for a suicide mission.",hours:"24-30",icon:"🚀"},
+    {id:45,name:"Mass Effect 3 (Legendary)",  genre:"Sci-Fi RPG",          fps:"40-50",tier:"S",trailer:"https://youtu.be/eBktyyaV9LY",desc:"Final battle against the Reapers.",hours:"24-30",icon:"🚀"},
+    {id:8, name:"Batman: Arkham Knight",      genre:"Action-Adventure",    fps:"25-35",tier:"A",trailer:"https://youtu.be/wsf78BS9VE0",desc:"Epic conclusion with the Batmobile.",hours:"15-18",icon:"🦇"},
+    {id:11,name:"Far Cry 3",                  genre:"FPS/Open World",      fps:"40-50",tier:"A",trailer:"https://youtu.be/ybdiu8iGsZg",desc:"Survive tropical island with insane Vaas.",hours:"15-20",icon:"🏝️"},
+    {id:20,name:"Doom (2016)",                genre:"FPS",                 fps:"45-55",tier:"A",trailer:"https://youtu.be/NteAPGprDJk",desc:"Rip and tear through demons.",hours:"11-13",icon:"😈"},
+    {id:46,name:"Warhammer 40K: Space Marine",genre:"Third-Person Action", fps:"50-60",tier:"A",trailer:"https://youtu.be/nb50aAFiOpM",desc:"Battle Orks as an Ultramarine.",hours:"7-9",icon:"⚔️"},
+    {id:47,name:"Hades II",                   genre:"Roguelike",           fps:"45-55",tier:"A",trailer:"https://youtu.be/CmxOutSzAAA",desc:"Fight through Underworld as Melinoe.",hours:"20-30",icon:"🔱"},
+    {id:31,name:"Sleeping Dogs",              genre:"Open World Action",   fps:"40-50",tier:"C",status:"completed",trailer:"https://youtu.be/virg-5zeC0M",desc:"Undercover in Hong Kong triads.",hours:"15-20",icon:"🐉"},
+    {id:32,name:"Max Payne 3",                genre:"Third-Person Shooter",fps:"40-50",tier:"C",trailer:"https://youtu.be/5MqFhlyGg1U",desc:"Max's final chapter in Sao Paulo.",hours:"8-10",icon:"🔫"},
+    {id:39,name:"NFS: Hot Pursuit Remastered",genre:"Racing",              fps:"50-60",tier:"R",trailer:"https://youtu.be/qLRy0DjT9J4",desc:"High-speed police chases.",hours:"8-12",icon:"🏎️"},
+    {id:40,name:"GRID 2",                     genre:"Racing",              fps:"50-60",tier:"R",trailer:"https://youtu.be/KsI1NV6hoDk",desc:"Arcade-sim racing balance.",hours:"10-15",icon:"🏁"},
+    {id:48,name:"The Crew",                   genre:"Racing",              fps:"35-45",tier:"R",trailer:"https://youtu.be/k9TcSHzEsqQ",desc:"Drive across entire USA.",hours:"20-30",icon:"🗺️"}
   ];
 
   function loadGames(){
@@ -113,31 +116,34 @@
   function saveGames(g){try{localStorage.setItem(CFG.STORE_KEY,JSON.stringify(g));}catch(e){}}
   function loadDark(){try{var v=localStorage.getItem(CFG.DARK_KEY);return v?JSON.parse(v):false;}catch(e){return false;}}
   function saveDark(v){try{localStorage.setItem(CFG.DARK_KEY,JSON.stringify(v));}catch(e){}}
+  function loadImgCache(){try{var v=localStorage.getItem(CFG.IMG_KEY);return v?JSON.parse(v):{} ;}catch(e){return {};}}
+  function saveImgCache(c){try{localStorage.setItem(CFG.IMG_KEY,JSON.stringify(c));}catch(e){}}
 
-  // SVG ICONS
   var SVG={
-    circle:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/></svg>',
-    download:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>',
-    play:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>',
-    check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>',
-    star:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
+    circle:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>',
+    download:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>',
+    play:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>',
+    check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>',
+    star:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
     starFill:'<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
-    plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
-    trash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
-    upload:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>',
-    chevD:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>',
-    chevU:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="18 15 12 9 6 15"/></svg>',
-    search:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>',
-    sliders:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>',
-    moon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>',
-    sun:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>',
-    youtube:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"/><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"/></svg>',
-    book:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>'
+    plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
+    trash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
+    upload:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>',
+    chevD:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>',
+    chevU:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg>',
+    search:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>',
+    sliders:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>',
+    moon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>',
+    sun:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>',
+    youtube:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"/><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"/></svg>',
+    book:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>',
+    refresh:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>'
   };
 
   var h=React.createElement;
   var useState=React.useState;
   var useEffect=React.useEffect;
+  var useCallback=React.useCallback;
 
   function Ico(props){
     var s=props.size||20;
@@ -150,169 +156,147 @@
 
   function Stars(props){
     var r=props.rating||0;
-    return h('div',{className:'flex gap-1'},
+    return h('div',{className:'flex gap-0.5'},
       [1,2,3,4,5].map(function(i){
-        return h('button',{key:i,onClick:function(e){e.stopPropagation();props.onChange(i);},className:'focus:outline-none hover:scale-110 transition-transform'},
-          h(Ico,{name:i<=r?'starFill':'star',size:props.small?12:20,className:i<=r?'text-yellow-500':'text-gray-400'})
+        return h('button',{key:i,onClick:function(e){e.stopPropagation();if(props.onChange)props.onChange(i);},className:'focus:outline-none '+(props.onChange?'hover:scale-110 transition-transform':'cursor-default')},
+          h(Ico,{name:i<=r?'starFill':'star',size:props.size||16,className:i<=r?'text-yellow-500':'text-gray-400'})
         );
       })
     );
   }
 
-  var STATUS_MAP={
-    not_downloaded:{icon:'circle',cls:'text-gray-400'},
-    downloaded:{icon:'download',cls:'text-blue-500'},
-    playing:{icon:'play',cls:'text-green-500'},
-    completed:{icon:'check',cls:'text-purple-500'},
-    favorite:{icon:'starFill',cls:'text-yellow-500'}
-  };
-
   var STATUS_BTNS=[
-    {key:'not_downloaded', label:'Not DL',   bg:'bg-gray-500',     ring:'ring-gray-400'},
-    {key:'downloaded',     label:'Downloaded',bg:'bg-blue-500',     ring:'ring-blue-400'},
-    {key:'playing',        label:'Playing',   bg:'bg-green-500',    ring:'ring-green-400'},
-    {key:'completed',      label:'Done',      bg:'bg-purple-500',   ring:'ring-purple-400'},
-    {key:'favorite',       label:'★ Fav',     bg:'bg-yellow-500',   ring:'ring-yellow-400'}
+    {key:'not_downloaded',label:'Not DL',   activeBg:'bg-gray-500',   inactiveBg:'bg-gray-200',   inactiveText:'text-gray-500'},
+    {key:'downloaded',    label:'Downloaded',activeBg:'bg-blue-500',   inactiveBg:'bg-blue-100',   inactiveText:'text-blue-400'},
+    {key:'playing',       label:'Playing',   activeBg:'bg-green-500',  inactiveBg:'bg-green-100',  inactiveText:'text-green-400'},
+    {key:'completed',     label:'Done',      activeBg:'bg-purple-500', inactiveBg:'bg-purple-100', inactiveText:'text-purple-400'},
+    {key:'favorite',      label:'★ Fav',     activeBg:'bg-yellow-500', inactiveBg:'bg-yellow-100', inactiveText:'text-yellow-500'}
   ];
 
+  // ── GAME CARD ────────────────────────────────────────────────────
   function GameCard(props){
     var g=props.game, dark=props.darkMode, exp=props.expanded;
+    var cover=props.cover;
     var en=useState(false); var editing=en[0]; var setEditing=en[1];
     var nd=useState(g.notes||''); var draft=nd[0]; var setDraft=nd[1];
 
     var tx=dark?'text-white':'text-gray-800';
-    var ts=dark?'text-gray-400':'text-gray-600';
+    var ts=dark?'text-gray-400':'text-gray-500';
     var t=CFG.TIERS[g.tier];
     var inp=dark?'bg-gray-700 text-white border-gray-600':'bg-white border-gray-300';
     var cardBg=dark?'bg-gray-800':'bg-white';
-    var borderColor=dark?'border-gray-700':'border-gray-200';
+    var border=dark?'border-gray-700':'border-gray-100';
 
-    // Left artwork thumbnail
-    var artwork = g.image
-      ? h('img',{
-          src:g.image, alt:g.name,
-          className:'w-16 h-20 object-cover rounded-lg flex-shrink-0',
-          onError:function(e){e.target.style.display='none';}
-        })
-      : h('div',{
-          className:'w-16 h-20 rounded-lg flex-shrink-0 flex items-center justify-center text-2xl '+(t?t.color+' bg-opacity-80':'bg-gray-400'),
-          style:{background: t ? undefined : '#6b7280'}
-        }, g.icon||'🎮');
+    // Cover image — use fetched cover, then g.image, then emoji fallback
+    var imgSrc = cover || g.image || '';
+    var artwork = imgSrc
+      ? h('div',{className:'w-16 h-20 flex-shrink-0 rounded-lg overflow-hidden bg-gray-200'},
+          h('img',{src:imgSrc,alt:g.name,className:'w-full h-full object-cover',onError:function(e){e.target.parentNode.innerHTML='<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:24px;background:'+(t?'':' #6b7280')+'">'+( g.icon||'🎮')+'</div>';}}))
+      : h('div',{className:'w-16 h-20 flex-shrink-0 rounded-lg flex items-center justify-center text-3xl '+(t?t.color:'bg-gray-400 text-white')},g.icon||'🎮');
 
-    return h('div',{className:cardBg+' rounded-xl shadow-lg overflow-hidden'},
+    return h('div',{className:cardBg+' rounded-xl shadow-md overflow-hidden border '+border},
 
-      // ── HEADER ROW (always visible) ──────────────────────────────
+      // HEADER — click to expand
       h('div',{onClick:function(){props.setExpanded(!exp);},className:'p-3 cursor-pointer active:opacity-80'},
         h('div',{className:'flex items-center gap-3'},
           artwork,
           h('div',{className:'flex-1 min-w-0'},
-            h('div',{className:'flex items-center gap-2 mb-1 flex-wrap'},
-              h('h3',{className:'font-bold text-sm '+tx},g.name),
-              t&&h('span',{className:'px-2 py-0.5 rounded text-xs font-bold '+t.color+' text-white'},t.label)
+            h('div',{className:'flex items-center gap-2 mb-0.5 flex-wrap'},
+              h('h3',{className:'font-bold text-sm leading-tight '+tx},g.name),
+              t&&h('span',{className:'px-1.5 py-0.5 rounded text-xs font-bold '+t.color+' text-white whitespace-nowrap'},t.label)
             ),
-            h('div',{className:'text-xs '+ts},
-              g.genre+' • '+g.fps+' FPS'+(g.hours?' • '+g.hours+'h':'')
-            ),
-            g.rating>0&&h('div',{className:'flex gap-0.5 mt-0.5'},
-              [1,2,3,4,5].map(function(i){return h(Ico,{key:i,name:i<=g.rating?'starFill':'star',size:11,className:i<=g.rating?'text-yellow-500':'text-gray-400'});})
-            )
+            h('p',{className:'text-xs '+ts},g.genre+' • '+g.fps+' FPS'+(g.hours?' • '+g.hours+'h':'')),
+            g.rating>0&&h('div',{className:'mt-0.5'},h(Stars,{rating:g.rating,size:11}))
           ),
-          h(Ico,{name:exp?'chevU':'chevD',size:16,className:ts+' flex-shrink-0'})
+          h(Ico,{name:exp?'chevU':'chevD',size:16,className:ts})
         )
       ),
 
-      // ── STATUS BUTTONS ROW (always visible) ──────────────────────
-      h('div',{
-        onClick:function(e){e.stopPropagation();},
-        className:'px-3 pb-3 flex gap-1'
-      },
+      // STATUS BUTTONS — always visible, one row
+      h('div',{className:'px-3 pb-3 flex gap-1',onClick:function(e){e.stopPropagation();}},
         STATUS_BTNS.map(function(sb){
           var active=g.status===sb.key;
           return h('button',{
             key:sb.key,
             onClick:function(e){e.stopPropagation();props.onStatus(g.id,sb.key);},
-            className:'flex-1 py-1 rounded text-white text-xs font-semibold transition-all '
-              +sb.bg
-              +(active?' ring-2 '+sb.ring+' ring-offset-1 opacity-100 scale-105':' opacity-40 hover:opacity-75')
+            className:'flex-1 py-1 rounded text-xs font-semibold transition-all '
+              +(active?(sb.activeBg+' text-white shadow-sm scale-105'):(sb.inactiveBg+' '+sb.inactiveText+' hover:opacity-80'))
           },sb.label);
         })
       ),
 
-      // ── EXPANDED DETAILS ─────────────────────────────────────────
-      exp&&h('div',{className:'px-3 pb-3 space-y-3 border-t '+borderColor+' pt-3'},
-        g.desc&&h('p',{className:'text-sm '+(dark?'text-gray-300':'text-gray-700')+' leading-relaxed'},g.desc),
+      // EXPANDED DETAILS
+      exp&&h('div',{className:'px-3 pb-3 border-t '+border+' pt-3 space-y-3'},
+        g.desc&&h('p',{className:'text-sm '+(dark?'text-gray-300':'text-gray-600')+' leading-relaxed'},g.desc),
         h('div',null,
           h('p',{className:'text-xs '+ts+' mb-1'},'Your Rating:'),
-          h(Stars,{rating:g.rating,onChange:function(r){props.onRating(g.id,r);}})
+          h(Stars,{rating:g.rating,size:20,onChange:function(r){props.onRating(g.id,r);}})
         ),
         h('div',null,
           h('p',{className:'text-xs '+ts+' mb-1'},'Notes:'),
           editing
             ?h('div',{className:'space-y-2'},
-                h('textarea',{value:draft,onChange:function(e){setDraft(e.target.value);},rows:3,maxLength:1000,onClick:function(e){e.stopPropagation();},placeholder:'Add thoughts...',className:'w-full p-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 '+inp}),
+                h('textarea',{value:draft,rows:3,maxLength:1000,
+                  onChange:function(e){setDraft(e.target.value);},
+                  onClick:function(e){e.stopPropagation();},
+                  placeholder:'Add thoughts...',
+                  className:'w-full p-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 '+inp}),
                 h('div',{className:'flex gap-2'},
-                  h('button',{onClick:function(e){e.stopPropagation();props.onNotes(g.id,draft);setEditing(false);},className:'flex-1 bg-green-500 text-white p-2 rounded text-sm font-bold'},'Save'),
-                  h('button',{onClick:function(e){e.stopPropagation();setDraft(g.notes||'');setEditing(false);},className:'flex-1 bg-gray-300 text-gray-700 p-2 rounded text-sm font-bold'},'Cancel')
+                  h('button',{onClick:function(e){e.stopPropagation();props.onNotes(g.id,draft);setEditing(false);},className:'flex-1 bg-green-500 text-white p-1.5 rounded text-sm font-bold'},'Save'),
+                  h('button',{onClick:function(e){e.stopPropagation();setDraft(g.notes||'');setEditing(false);},className:'flex-1 bg-gray-300 text-gray-700 p-1.5 rounded text-sm font-bold'},'Cancel')
                 )
               )
-            :h('button',{onClick:function(e){e.stopPropagation();setDraft(g.notes||'');setEditing(true);},className:'w-full p-2 border rounded text-sm text-left '+(dark?'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600':'bg-gray-50 border-gray-300 hover:bg-gray-100')},g.notes||'Add notes...')
+            :h('button',{onClick:function(e){e.stopPropagation();setDraft(g.notes||'');setEditing(true);},
+                className:'w-full p-2 border rounded text-sm text-left '+(dark?'bg-gray-700 border-gray-600 text-gray-300':'bg-gray-50 border-gray-200 text-gray-500 hover:bg-gray-100')},
+                g.notes||'Add notes...')
         ),
-        h('div',{className:'space-y-2'},
-          g.trailer&&h('a',{href:g.trailer,target:'_blank',rel:'noopener noreferrer',onClick:function(e){e.stopPropagation();},className:'flex items-center justify-center gap-2 bg-red-500 text-white p-3 rounded-lg font-bold hover:bg-red-600'},
-            h(Ico,{name:'youtube',size:18,className:'text-white'}),' Watch Trailer'),
-          h('a',{href:'https://www.youtube.com/results?search_query=gameranx+'+encodeURIComponent(g.name)+'+before+you+buy',target:'_blank',rel:'noopener noreferrer',onClick:function(e){e.stopPropagation();},className:'flex items-center justify-center gap-2 bg-blue-500 text-white p-3 rounded-lg font-bold hover:bg-blue-600'},
-            h(Ico,{name:'book',size:18,className:'text-white'}),' Gameranx Review')
+        h('div',{className:'flex flex-col gap-2'},
+          g.trailer&&h('a',{href:g.trailer,target:'_blank',rel:'noopener noreferrer',
+            onClick:function(e){e.stopPropagation();},
+            className:'flex items-center justify-center gap-2 bg-red-500 text-white p-2.5 rounded-lg font-bold text-sm hover:bg-red-600'},
+            h(Ico,{name:'youtube',size:16,className:'text-white'}),' Watch Trailer'),
+          h('a',{href:'https://www.youtube.com/results?search_query=gameranx+'+encodeURIComponent(g.name)+'+before+you+buy',
+            target:'_blank',rel:'noopener noreferrer',onClick:function(e){e.stopPropagation();},
+            className:'flex items-center justify-center gap-2 bg-blue-500 text-white p-2.5 rounded-lg font-bold text-sm hover:bg-blue-600'},
+            h(Ico,{name:'book',size:16,className:'text-white'}),' Gameranx Review')
         ),
-        g.id>=1000&&h('button',{onClick:function(e){e.stopPropagation();if(confirm('Delete "'+g.name+'"?'))props.onDelete(g.id);},className:'w-full flex items-center justify-center gap-2 bg-red-600 text-white p-2 rounded-lg text-sm font-bold hover:bg-red-700'},
-          h(Ico,{name:'trash',size:16,className:'text-white'}),' Delete Game')
+        g.id>=1000&&h('button',{
+          onClick:function(e){e.stopPropagation();if(confirm('Delete "'+g.name+'"?'))props.onDelete(g.id);},
+          className:'w-full flex items-center justify-center gap-2 bg-red-600 text-white p-2 rounded-lg text-sm font-bold hover:bg-red-700 mt-1'},
+          h(Ico,{name:'trash',size:14,className:'text-white'}),' Delete Game')
       )
     );
   }
 
+  // ── ADD GAME FORM ────────────────────────────────────────────────
   function AddForm(props){
     var dark=props.darkMode;
-    var fs=useState({name:'',genre:'',fps:'',tier:'C',priority:'MEDIUM',trailer:'',desc:'',hours:'',icon:'🎮'});
+    var fs=useState({name:'',genre:'',fps:'',tier:'C',priority:'MEDIUM',trailer:'',desc:'',hours:'',icon:'🎮',image:''});
     var f=fs[0]; var sf=fs[1];
     var ss=useState(false); var searching=ss[0]; var setSearching=ss[1];
     var rs=useState([]); var results=rs[0]; var setResults=rs[1];
     var inp=dark?'bg-gray-700 text-white border-gray-600':'bg-white border-gray-300';
     var tx=dark?'text-white':'text-gray-800';
     var card=dark?'bg-gray-800':'bg-white';
-
     function set(k,v){sf(function(p){var n=Object.assign({},p);n[k]=v;return n;});}
 
-    function getRawgKey(){return localStorage.getItem('rawgApiKey')||'c2ad28b9e8594e72bf24b87c05bc84c7';}
-
     function doSearch(){
-      if(!f.name||f.name.length<2){return;}
-      var key=getRawgKey();
-      if(!key){
-        var k=prompt('RAWG API Key needed for game search.\n\nGet your FREE key:\n1. Go to rawg.io/apidocs\n2. Sign up (free, takes 1 min)\n3. Copy your API key and paste it below:');
-        if(!k||!k.trim()){return;}
-        localStorage.setItem('rawgApiKey',k.trim());
-        key=k.trim();
-      }
+      if(!f.name||f.name.length<2)return;
       setSearching(true);setResults([]);
-      fetch('https://api.rawg.io/api/games?search='+encodeURIComponent(f.name)+'&page_size=6&key='+key)
-        .then(function(r){
-          if(r.status===401||r.status===403){localStorage.removeItem('rawgApiKey');throw new Error('Invalid API key — please try again.');}
-          return r.json();
-        })
+      rawg('games?search='+encodeURIComponent(f.name)+'&page_size=6')
         .then(function(d){
           var list=(d.results||[]).map(function(g){
             return {id:g.id,name:g.name,released:g.released,rating:g.rating,image:g.background_image,genres:(g.genres||[]).map(function(x){return x.name;}).join(', ')};
           });
-          setResults(list.length?list:[{id:'none',name:'No results found — try a different search.',noResult:true}]);
+          setResults(list.length?list:[{id:'none',name:'No results found.',noResult:true}]);
           setSearching(false);
         })
-        .catch(function(e){alert('Search error: '+(e.message||'Unknown error. Check console for details.'));setSearching(false);});
+        .catch(function(e){alert('Search failed: '+(e.message||'unknown'));setSearching(false);});
     }
 
     function selectGame(id){
       setSearching(true);setResults([]);
-      var key=getRawgKey();
-      fetch('https://api.rawg.io/api/games/'+id+'?key='+key)
-        .then(function(r){return r.json();})
+      rawg('games/'+id)
         .then(function(g){
           var yr=g.released?parseInt(g.released):2020;
           var age=new Date().getFullYear()-yr;
@@ -321,19 +305,15 @@
           var tier=sc>=90?'S':sc>=80?'A':sc>=70?'B':'C';
           var em={Action:'⚔️',Adventure:'🗺️',RPG:'🎭',Shooter:'🔫',Racing:'🏎️',Sports:'⚽',Horror:'👻',Indie:'🎨'};
           var gn=(g.genres||[{name:''}])[0].name;
-          sf({
-            name:g.name,
-            genre:(g.genres||[]).map(function(x){return x.name;}).join(', ')||'Unknown',
+          sf({name:g.name,genre:(g.genres||[]).map(function(x){return x.name;}).join(', ')||'Unknown',
             fps:fps,tier:tier,priority:'MEDIUM',
             trailer:'https://www.youtube.com/results?search_query='+encodeURIComponent(g.name)+'+official+trailer',
             desc:g.description_raw?g.description_raw.substring(0,200)+'...':'',
             hours:g.playtime?g.playtime+'-'+(g.playtime+5):'',
-            icon:em[gn]||'🎮',
-            image:g.background_image||''
-          });
+            icon:em[gn]||'🎮',image:g.background_image||''});
           setSearching(false);
         })
-        .catch(function(e){alert('Details error: '+(e.message||'Unknown'));setSearching(false);});
+        .catch(function(e){alert('Details failed: '+(e.message||'unknown'));setSearching(false);});
     }
 
     function submit(e){
@@ -349,47 +329,142 @@
         h('button',{onClick:props.onClose,className:'text-gray-500 hover:text-gray-700 text-xl'},'✕')
       ),
       h('div',{className:'bg-purple-50 p-3 rounded-lg mb-3'},
-        h('p',{className:'text-sm font-medium mb-2 text-gray-800'},'🔍 Search for Game Info'),
+        h('p',{className:'text-sm font-medium mb-2 text-gray-800'},'🔍 Search RAWG Database'),
         h('div',{className:'flex gap-2'},
-          h('input',{type:'text',placeholder:'Game name...',value:f.name,onChange:function(e){set('name',e.target.value);},disabled:searching,className:'flex-1 p-2 border rounded text-sm '+(dark?'bg-gray-700 text-white border-gray-600':'border-gray-300')}),
-          h('button',{type:'button',onClick:doSearch,disabled:searching||!f.name,className:'px-4 py-2 rounded font-bold text-sm text-white '+(searching||!f.name?'bg-gray-400 cursor-not-allowed':'bg-blue-500 hover:bg-blue-600')},searching?'⏳':'🔍')
+          h('input',{type:'text',placeholder:'Game name...',value:f.name,disabled:searching,
+            onChange:function(e){set('name',e.target.value);},
+            onKeyDown:function(e){if(e.key==='Enter'){e.preventDefault();doSearch();}},
+            className:'flex-1 p-2 border rounded text-sm '+(dark?'bg-gray-700 text-white border-gray-600':'border-gray-300')}),
+          h('button',{type:'button',onClick:doSearch,disabled:searching||!f.name,
+            className:'px-4 py-2 rounded font-bold text-sm text-white '+(searching||!f.name?'bg-gray-400 cursor-not-allowed':'bg-blue-500 hover:bg-blue-600')},
+            searching?'⏳':'🔍')
         )
       ),
-      results.length>0&&h('div',{className:'mb-3 rounded-lg border p-2 max-h-60 overflow-y-auto '+(dark?'bg-gray-700 border-gray-600':'bg-gray-50 border-gray-300')},
-        h('p',{className:'text-xs font-medium mb-2 '+tx},'Select a game:'),
+      results.length>0&&h('div',{className:'mb-3 rounded-lg border p-2 max-h-56 overflow-y-auto '+(dark?'bg-gray-700 border-gray-600':'bg-gray-50 border-gray-200')},
         results.map(function(g){
-          return h('button',{key:g.id,type:'button',onClick:function(){selectGame(g.id);},className:'w-full text-left p-2 rounded mb-1 flex items-center gap-2 '+(dark?'bg-gray-600 hover:bg-gray-500':'bg-white hover:bg-gray-100')},
-            g.image&&h('img',{src:g.image,alt:'',className:'w-10 h-10 object-cover rounded',onError:function(e){e.target.style.display='none';}}),
-            h('div',{className:'flex-1'},
-              h('p',{className:'text-sm font-medium '+tx},g.name),
-              h('p',{className:'text-xs opacity-75'},(g.released||'')+(g.genres?' • '+g.genres:''))
+          if(g.noResult)return h('p',{key:'nr',className:'text-sm text-center py-2 '+tx},g.name);
+          return h('button',{key:g.id,type:'button',onClick:function(){selectGame(g.id);},
+            className:'w-full text-left p-2 rounded mb-1 flex items-center gap-2 '+(dark?'bg-gray-600 hover:bg-gray-500':'bg-white hover:bg-gray-100')},
+            g.image&&h('img',{src:g.image,alt:'',className:'w-10 h-10 object-cover rounded flex-shrink-0',onError:function(e){e.target.style.display='none';}}),
+            h('div',{className:'flex-1 min-w-0'},
+              h('p',{className:'text-sm font-medium '+tx+' truncate'},g.name),
+              h('p',{className:'text-xs opacity-60 truncate'},(g.released||'')+(g.genres?' • '+g.genres:''))
             ),
-            g.rating&&h('span',{className:'text-yellow-500 text-xs'},'⭐'+g.rating)
+            g.rating&&h('span',{className:'text-yellow-500 text-xs flex-shrink-0'},'⭐'+parseFloat(g.rating).toFixed(1))
           );
         }),
-        h('button',{type:'button',onClick:function(){setResults([]);},className:'w-full text-xs text-gray-500 mt-1'},'Cancel')
+        h('button',{type:'button',onClick:function(){setResults([]);},className:'w-full text-xs text-gray-400 mt-1 hover:text-gray-600'},'✕ Clear results')
       ),
       h('form',{onSubmit:submit,className:'space-y-2'},
         h('div',{className:'grid grid-cols-2 gap-2'},
           h('input',{type:'text',placeholder:'Genre',value:f.genre,onChange:function(e){set('genre',e.target.value);},className:'w-full p-2 border rounded text-sm '+inp}),
-          h('input',{type:'text',placeholder:'FPS (e.g. 30-60)',value:f.fps,onChange:function(e){set('fps',e.target.value);},className:'w-full p-2 border rounded text-sm '+inp})
+          h('input',{type:'text',placeholder:'FPS e.g. 30-60',value:f.fps,onChange:function(e){set('fps',e.target.value);},className:'w-full p-2 border rounded text-sm '+inp})
         ),
         h('div',{className:'grid grid-cols-2 gap-2'},
           h('input',{type:'text',placeholder:'Hours',value:f.hours,onChange:function(e){set('hours',e.target.value);},className:'w-full p-2 border rounded text-sm '+inp}),
           h('input',{type:'text',placeholder:'Icon emoji',value:f.icon,onChange:function(e){set('icon',e.target.value);},className:'w-full p-2 border rounded text-sm '+inp})
         ),
         h('select',{value:f.tier,onChange:function(e){set('tier',e.target.value);},className:'w-full p-2 border rounded text-sm '+inp},
-          Object.keys(CFG.TIERS).map(function(t){return h('option',{key:t,value:t},t+' - '+CFG.TIERS[t].label);})),
-        h('input',{type:'url',placeholder:'Trailer URL',value:f.trailer,onChange:function(e){set('trailer',e.target.value);},className:'w-full p-2 border rounded text-sm '+inp}),
+          Object.keys(CFG.TIERS).map(function(t){return h('option',{key:t,value:t},t+' — '+CFG.TIERS[t].label);})),
+        h('input',{type:'url',placeholder:'Trailer URL (YouTube)',value:f.trailer,onChange:function(e){set('trailer',e.target.value);},className:'w-full p-2 border rounded text-sm '+inp}),
         h('textarea',{placeholder:'Description',value:f.desc,onChange:function(e){set('desc',e.target.value);},rows:2,className:'w-full p-2 border rounded text-sm '+inp}),
-        h('div',{className:'flex gap-2'},
-          h('button',{type:'submit',className:'flex-1 bg-green-500 text-white p-2 rounded font-bold hover:bg-green-600'},'Save Game'),
-          h('button',{type:'button',onClick:props.onClose,className:'flex-1 bg-gray-300 text-gray-700 p-2 rounded font-bold hover:bg-gray-400'},'Cancel')
+        h('div',{className:'flex gap-2 pt-1'},
+          h('button',{type:'submit',className:'flex-1 bg-green-500 text-white p-2 rounded font-bold hover:bg-green-600'},'✓ Save Game'),
+          h('button',{type:'button',onClick:props.onClose,className:'flex-1 bg-gray-200 text-gray-700 p-2 rounded font-bold hover:bg-gray-300'},'Cancel')
         )
       )
     );
   }
 
+  // ── SIDEBAR ──────────────────────────────────────────────────────
+  var SIDEBAR_TABS=[
+    {key:'trending', label:'🔥 Trending',    endpoint:'games?ordering=-added&page_size=10'},
+    {key:'toprated', label:'⭐ Top Rated',   endpoint:'games?ordering=-rating&metacritic=70,100&page_size=10'},
+    {key:'new',      label:'🆕 New Releases',endpoint:'games?ordering=-released&page_size=10'},
+    {key:'upcoming', label:'📅 Upcoming',    endpoint:'games?ordering=-added&dates=2025-01-01,2026-12-31&page_size=10'}
+  ];
+
+  function Sidebar(props){
+    var dark=props.darkMode;
+    var ts=useState('trending'); var activeTab=ts[0]; var setActiveTab=ts[1];
+    var ld=useState([]); var items=ld[0]; var setItems=ld[1];
+    var ls=useState(false); var loading=ls[0]; var setLoading=ls[1];
+    var ke=useState(0); var refreshKey=ke[0]; var setRefreshKey=ke[1];
+
+    var card=dark?'bg-gray-800':'bg-white';
+    var tx=dark?'text-gray-100':'text-gray-800';
+    var ts2=dark?'text-gray-400':'text-gray-500';
+    var border=dark?'border-gray-700':'border-gray-100';
+
+    useEffect(function(){
+      setLoading(true);setItems([]);
+      var tab=SIDEBAR_TABS.find(function(t){return t.key===activeTab;});
+      if(!tab){setLoading(false);return;}
+      rawg(tab.endpoint)
+        .then(function(d){
+          setItems(d.results||[]);
+          setLoading(false);
+        })
+        .catch(function(){setLoading(false);});
+    },[activeTab, refreshKey]);
+
+    return h('div',{className:card+' rounded-xl shadow-md overflow-hidden sidebar-scroll'},
+      // Tab header + refresh
+      h('div',{className:'p-3 border-b '+border},
+        h('div',{className:'flex items-center justify-between mb-2'},
+          h('span',{className:'font-bold text-sm '+tx},'🌐 Gaming World'),
+          h('button',{
+            onClick:function(){setRefreshKey(function(k){return k+1;});},
+            title:'Refresh',
+            className:'p-1 rounded-lg text-gray-400 hover:text-purple-500 hover:bg-purple-50 transition-colors '+(loading?'animate-pulse':'')
+          },h(Ico,{name:'refresh',size:16}))
+        ),
+        h('div',{className:'flex gap-1 overflow-x-auto pb-1'},
+          SIDEBAR_TABS.map(function(tab){
+            return h('button',{key:tab.key,onClick:function(){setActiveTab(tab.key);},
+              className:'px-2 py-1 rounded-lg text-xs font-medium whitespace-nowrap transition-colors '
+                +(activeTab===tab.key?'bg-purple-600 text-white':(dark?'bg-gray-700 text-gray-300 hover:bg-gray-600':'bg-gray-100 text-gray-600 hover:bg-gray-200'))
+            },tab.label);
+          })
+        )
+      ),
+      // Content
+      h('div',{className:'divide-y '+(dark?'divide-gray-700':'divide-gray-50')},
+        loading
+          ?[1,2,3,4,5].map(function(i){
+              return h('div',{key:i,className:'p-3 flex gap-2 items-center'},
+                h('div',{className:'w-12 h-16 rounded bg-gray-200 animate-pulse flex-shrink-0'}),
+                h('div',{className:'flex-1 space-y-2'},
+                  h('div',{className:'h-3 bg-gray-200 rounded animate-pulse w-3/4'}),
+                  h('div',{className:'h-2 bg-gray-200 rounded animate-pulse w-1/2'}),
+                  h('div',{className:'h-2 bg-gray-200 rounded animate-pulse w-1/3'})
+                )
+              );
+            })
+          :items.length===0
+            ?h('div',{className:'p-6 text-center '+ts2},'No data available')
+            :items.map(function(game){
+                return h('div',{key:game.id,className:'p-3 flex gap-2 items-start hover:bg-opacity-50 '+(dark?'hover:bg-gray-700':'hover:bg-gray-50')+' transition-colors'},
+                  game.background_image
+                    ?h('img',{src:game.background_image,alt:game.name,className:'w-12 h-16 object-cover rounded flex-shrink-0',onError:function(e){e.target.style.display='none';}})
+                    :h('div',{className:'w-12 h-16 bg-gray-200 rounded flex-shrink-0 flex items-center justify-center text-xl'},'🎮'),
+                  h('div',{className:'flex-1 min-w-0'},
+                    h('p',{className:'text-xs font-semibold '+tx+' leading-tight mb-0.5'},game.name),
+                    game.released&&h('p',{className:'text-xs '+ts2},game.released),
+                    (game.genres||[]).length>0&&h('p',{className:'text-xs '+ts2+' truncate'},(game.genres||[]).slice(0,2).map(function(g){return g.name;}).join(', ')),
+                    game.rating>0&&h('div',{className:'flex items-center gap-1 mt-0.5'},
+                      h('span',{className:'text-yellow-500 text-xs'},'⭐'),
+                      h('span',{className:'text-xs '+ts2},parseFloat(game.rating).toFixed(1)),
+                      game.metacritic&&h('span',{className:'text-xs bg-green-100 text-green-700 px-1 rounded ml-1'},game.metacritic)
+                    )
+                  )
+                );
+              })
+      )
+    );
+  }
+
+  // ── MAIN APP ─────────────────────────────────────────────────────
   function App(){
     var gs=useState(function(){return loadGames();}); var games=gs[0]; var setGames=gs[1];
     var ds=useState(function(){return loadDark();}); var dark=ds[0]; var setDark=ds[1];
@@ -399,10 +474,37 @@
     var ss=useState('tier'); var sort=ss[0]; var setSort=ss[1];
     var shs=useState(false); var showSort=shs[0]; var setShowSort=shs[1];
     var as=useState(false); var showAdd=as[0]; var setShowAdd=as[1];
+    var ic=useState(function(){return loadImgCache();}); var imgCache=ic[0]; var setImgCache=ic[1];
 
     useEffect(function(){saveGames(games);},[games]);
     useEffect(function(){saveDark(dark);},[dark]);
+    useEffect(function(){saveImgCache(imgCache);},[imgCache]);
     useEffect(function(){setTimeout(hideLoader,400);},[]);
+
+    // Auto-fetch cover art for games that don't have it cached
+    useEffect(function(){
+      var missing=games.filter(function(g){return !imgCache[g.id]&&!g.image;});
+      if(missing.length===0)return;
+      var i=0;
+      function fetchNext(){
+        if(i>=missing.length)return;
+        var g=missing[i++];
+        rawg('games?search='+encodeURIComponent(g.name)+'&page_size=1&exact=true')
+          .then(function(d){
+            var r=(d.results||[])[0];
+            if(r&&r.background_image){
+              setImgCache(function(prev){
+                var next=Object.assign({},prev);
+                next[g.id]=r.background_image;
+                return next;
+              });
+            }
+          })
+          .catch(function(){})
+          .then(function(){setTimeout(fetchNext,350);}); // 350ms between requests
+      }
+      fetchNext();
+    },[]);
 
     var shown=games.filter(function(g){
       if(filter!=='all'&&g.status!==filter)return false;
@@ -427,127 +529,140 @@
 
     var card=dark?'bg-gray-800':'bg-white';
     var tx=dark?'text-gray-100':'text-gray-800';
-    var ts=dark?'text-gray-400':'text-gray-600';
+    var ts=dark?'text-gray-400':'text-gray-500';
     var bg=dark?'bg-gradient-to-br from-gray-900 via-indigo-900 to-purple-900':'bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900';
     var inp=dark?'bg-gray-700 text-white border-gray-600':'bg-white border-gray-300';
 
-    function upStatus(id,newStatus){setGames(function(gs){return gs.map(function(g){if(g.id!==id)return g;return Object.assign({},g,{status:newStatus||g.status});});});}
+    function upStatus(id,ns){setGames(function(gs){return gs.map(function(g){return g.id===id?Object.assign({},g,{status:ns}):g;});});}
     function upRating(id,r){setGames(function(gs){return gs.map(function(g){return g.id===id?Object.assign({},g,{rating:r}):g;});});}
     function upNotes(id,n){setGames(function(gs){return gs.map(function(g){return g.id===id?Object.assign({},g,{notes:n}):g;});});}
     function delGame(id){setGames(function(gs){return gs.filter(function(g){return g.id!==id;});});setExpId(null);}
     function addGame(gd){setGames(function(gs){return gs.concat([gd]);});}
 
-    var filters=[['all','All',total],['not_downloaded','Not DL',notdl],['downloaded','Downloaded',dld],['playing','Playing',playing],['completed','Done',completed],['favorite','Fav',fav]];
+    var filters=[['all','All',total],['not_downloaded','Not DL',notdl],['downloaded','DL\'d',dld],['playing','Playing',playing],['completed','Done',completed],['favorite','Fav',fav]];
 
     return h('div',{className:'min-h-screen '+bg+' p-3'},
-      h('div',{className:'max-w-4xl mx-auto'},
+      // Two-column layout on large screens
+      h('div',{className:'max-w-7xl mx-auto lg:flex lg:gap-4 lg:items-start'},
 
-        // HEADER
-        h('div',{className:card+' rounded-xl shadow-2xl p-4 mb-4'},
-          h('div',{className:'flex justify-between items-center mb-1'},
-            h('h1',{className:'text-2xl font-bold '+tx},CFG.APP_NAME),
-            h('button',{onClick:function(){setDark(!dark);},className:'p-2 rounded-lg bg-gray-200 hover:bg-gray-300'},h(Ico,{name:dark?'sun':'moon',size:20}))
-          ),
-          h('p',{className:'text-sm '+ts+' mb-3'},'Tap card to expand • Tap icon to change status'),
-          h('div',{className:'flex justify-between text-xs mb-1'},h('span',{className:ts},'Completion'),h('span',{className:tx},pct+'%')),
-          h('div',{className:'w-full bg-gray-300 rounded-full h-2'},h('div',{className:'bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all',style:{width:pct+'%'}})),
-          h('p',{className:'text-xs mt-1 text-center '+ts},(completed+fav)+' of '+total+' completed')
-        ),
+        // ── LEFT: MAIN COLUMN ──────────────────────────────────────
+        h('div',{className:'flex-1 min-w-0'},
 
-        // SEARCH
-        h('div',{className:card+' rounded-xl shadow-xl p-3 mb-4'},
-          h('div',{className:'flex gap-2'},
-            h('div',{className:'flex-1 relative'},
-              h('span',{className:'absolute left-3 top-1/2 -translate-y-1/2 text-gray-400'},h(Ico,{name:'search',size:18})),
-              h('input',{type:'text',placeholder:'Search games...',value:q,onChange:function(e){setQ(e.target.value);},className:'w-full pl-10 pr-3 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-purple-500 '+inp})
+          // HEADER
+          h('div',{className:card+' rounded-xl shadow-2xl p-4 mb-4'},
+            h('div',{className:'flex justify-between items-center mb-1'},
+              h('h1',{className:'text-xl font-bold '+tx},CFG.APP_NAME),
+              h('button',{onClick:function(){setDark(!dark);},className:'p-2 rounded-lg '+(dark?'bg-gray-700 hover:bg-gray-600':'bg-gray-100 hover:bg-gray-200')},
+                h(Ico,{name:dark?'sun':'moon',size:18}))
             ),
-            h('button',{onClick:function(){setShowSort(!showSort);},className:'px-3 py-2 bg-purple-600 text-white rounded-lg'},h(Ico,{name:'sliders',size:20,className:'text-white'}))
+            h('p',{className:'text-xs '+ts+' mb-3'},'Tap card to expand details • Click a status button to update'),
+            h('div',{className:'flex justify-between text-xs mb-1'},h('span',{className:ts},'Progress'),h('span',{className:tx},pct+'%')),
+            h('div',{className:'w-full bg-gray-200 rounded-full h-2'},
+              h('div',{className:'bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all',style:{width:pct+'%'}})),
+            h('p',{className:'text-xs mt-1 text-center '+ts},(completed+fav)+' of '+total+' completed')
           ),
-          showSort&&h('div',{className:'flex gap-2 flex-wrap mt-3'},
-            [['tier','By Tier'],['name','By Name'],['fps','By FPS'],['rating','By Rating']].map(function(o){
-              return h('button',{key:o[0],onClick:function(){setSort(o[0]);},className:'px-3 py-1 rounded text-sm '+(sort===o[0]?'bg-purple-600 text-white':(dark?'bg-gray-700 text-gray-300':'bg-gray-200 text-gray-700'))},o[1]);
-            })
-          )
-        ),
 
-        // STATS
-        h('div',{className:'grid grid-cols-3 gap-2 mb-4'},
-          h('div',{className:card+' rounded-lg p-3 text-center shadow'},h('div',{className:'text-xl font-bold '+tx},total),h('div',{className:'text-xs '+ts},'Total')),
-          h('div',{className:(dark?'bg-green-900':'bg-green-100')+' rounded-lg p-3 text-center shadow'},h('div',{className:'text-xl font-bold '+(dark?'text-green-300':'text-green-700')},playing),h('div',{className:'text-xs '+(dark?'text-green-400':'text-green-700')},'Playing')),
-          h('div',{className:(dark?'bg-purple-900':'bg-purple-100')+' rounded-lg p-3 text-center shadow'},h('div',{className:'text-xl font-bold '+(dark?'text-purple-300':'text-purple-700')},completed),h('div',{className:'text-xs '+(dark?'text-purple-400':'text-purple-700')},'Done'))
-        ),
-
-        // FILTERS
-        h('div',{className:card+' rounded-xl shadow-xl p-3 mb-4'},
-          h('div',{className:'flex gap-2 overflow-x-auto pb-1'},
-            filters.map(function(fb){
-              return h('button',{key:fb[0],onClick:function(){setFilter(fb[0]);},className:'px-3 py-2 rounded whitespace-nowrap text-sm font-medium '+(filter===fb[0]?'bg-purple-600 text-white':(dark?'bg-gray-700 text-gray-300':'bg-gray-100 text-gray-700'))},fb[1]+' ('+fb[2]+')');
-            })
-          )
-        ),
-
-        // EXPORT/IMPORT
-        h('div',{className:card+' rounded-xl shadow-xl p-3 mb-4 flex gap-2'},
-          h('button',{onClick:function(){
-            var blob=new Blob([JSON.stringify(games,null,2)],{type:'application/json'});
-            var url=URL.createObjectURL(blob);
-            var a=document.createElement('a');a.href=url;a.download='gaming-backup-'+Date.now()+'.json';a.click();
-            setTimeout(function(){URL.revokeObjectURL(url);},100);
-          },className:'flex-1 flex items-center justify-center gap-2 bg-green-500 text-white p-2 rounded-lg font-medium text-sm hover:bg-green-600'},
-            h(Ico,{name:'download',size:16,className:'text-white'}),' Export'),
-          h('label',{className:'flex-1 flex items-center justify-center gap-2 bg-blue-500 text-white p-2 rounded-lg font-medium text-sm cursor-pointer hover:bg-blue-600'},
-            h(Ico,{name:'upload',size:16,className:'text-white'}),' Import',
-            h('input',{type:'file',accept:'.json',className:'hidden',onChange:function(e){
-              var file=e.target.files[0];if(!file)return;
-              var r=new FileReader();
-              r.onload=function(ev){try{var d=JSON.parse(ev.target.result);if(confirm('Import '+d.length+' games? This replaces your list.'))setGames(d);}catch(err){alert('Invalid file.');}};
-              r.readAsText(file);e.target.value='';
-            }})
-          )
-        ),
-
-        // ADD GAME
-        showAdd
-          ?h(AddForm,{darkMode:dark,onAdd:addGame,onClose:function(){setShowAdd(false);}})
-          :h('button',{onClick:function(){setShowAdd(true);},className:'w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl p-4 font-bold shadow-xl flex items-center justify-center gap-2 hover:from-purple-700 hover:to-pink-700 mb-4'},
-              h(Ico,{name:'plus',size:20,className:'text-white'}),' Add New Game'),
-
-        // GAME LIST
-        shown.length>0
-          ?h('div',{className:'space-y-3'},
-              shown.map(function(g){
-                return h(GameCard,{key:g.id,game:g,darkMode:dark,expanded:expId===g.id,
-                  setExpanded:function(v){setExpId(v?g.id:null);},
-                  onStatus:upStatus,onRating:upRating,onNotes:upNotes,onDelete:delGame});
+          // SEARCH + SORT
+          h('div',{className:card+' rounded-xl shadow-md p-3 mb-4'},
+            h('div',{className:'flex gap-2'},
+              h('div',{className:'flex-1 relative'},
+                h('span',{className:'absolute left-3 top-1/2 -translate-y-1/2 text-gray-400'},h(Ico,{name:'search',size:16})),
+                h('input',{type:'text',placeholder:'Search games...',value:q,
+                  onChange:function(e){setQ(e.target.value);},
+                  className:'w-full pl-9 pr-3 py-2 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 '+inp})
+              ),
+              h('button',{onClick:function(){setShowSort(!showSort);},
+                className:'px-3 py-2 rounded-lg '+(showSort?'bg-purple-600 text-white':'bg-purple-100 text-purple-600 hover:bg-purple-200')},
+                h(Ico,{name:'sliders',size:16}))
+            ),
+            showSort&&h('div',{className:'flex gap-2 flex-wrap mt-2'},
+              [['tier','Tier'],['name','Name'],['fps','FPS'],['rating','Rating']].map(function(o){
+                return h('button',{key:o[0],onClick:function(){setSort(o[0]);},
+                  className:'px-3 py-1 rounded text-xs font-medium '+(sort===o[0]?'bg-purple-600 text-white':(dark?'bg-gray-700 text-gray-300':'bg-gray-100 text-gray-600'))
+                },'Sort by '+o[1]);
               })
             )
-          :h('div',{className:card+' rounded-xl shadow-xl p-8 text-center'},
-              h('div',{className:'text-6xl mb-4'},'🎮'),
-              h('p',{className:'text-lg font-medium '+ts},'No games found'),
-              h('p',{className:'text-sm '+ts},q?'No games match "'+q+'"':filter!=='all'?'No games in this category':'Add some games!')
-            ),
-
-        // LEGEND
-        h('div',{className:card+' rounded-xl shadow-xl p-4 mt-6'},
-          h('h3',{className:'font-bold mb-3 '+tx},'How to Use'),
-          h('div',{className:'space-y-1 text-sm '+ts},
-            h('p',null,'• Tap card to expand details'),
-            h('p',null,'• Tap a status button directly on each card'),
-            h('p',null,'• Tap stars to rate a game'),
-            h('p',null,'• Export/Import to backup your data')
           ),
-          h('h3',{className:'font-bold mt-4 mb-2 '+tx},'Status Icons'),
-          h('div',{className:'grid grid-cols-2 gap-2 text-sm'},
-            [['circle','text-gray-400','Not Downloaded'],['download','text-blue-500','Downloaded'],['play','text-green-500','Playing'],['check','text-purple-500','Completed'],['starFill','text-yellow-500','Favorite']].map(function(r){
-              return h('div',{key:r[0],className:'flex items-center gap-2'},h(Ico,{name:r[0],size:16,className:r[1]}),h('span',{className:ts},r[2]));
-            })
-          )
+
+          // STATS
+          h('div',{className:'grid grid-cols-3 gap-2 mb-4'},
+            h('div',{className:card+' rounded-lg p-3 text-center shadow'},
+              h('div',{className:'text-2xl font-bold '+tx},total),h('div',{className:'text-xs '+ts},'Total')),
+            h('div',{className:(dark?'bg-green-900':'bg-green-50')+' rounded-lg p-3 text-center shadow'},
+              h('div',{className:'text-2xl font-bold '+(dark?'text-green-300':'text-green-600')},playing),h('div',{className:'text-xs '+(dark?'text-green-400':'text-green-500')},'Playing')),
+            h('div',{className:(dark?'bg-purple-900':'bg-purple-50')+' rounded-lg p-3 text-center shadow'},
+              h('div',{className:'text-2xl font-bold '+(dark?'text-purple-300':'text-purple-600')},completed+fav),h('div',{className:'text-xs '+(dark?'text-purple-400':'text-purple-500')},'Completed'))
+          ),
+
+          // FILTERS
+          h('div',{className:card+' rounded-xl shadow-md p-3 mb-4'},
+            h('div',{className:'flex gap-1.5 overflow-x-auto pb-1'},
+              filters.map(function(fb){
+                return h('button',{key:fb[0],onClick:function(){setFilter(fb[0]);},
+                  className:'px-3 py-1.5 rounded-lg whitespace-nowrap text-xs font-semibold transition-colors '
+                    +(filter===fb[0]?'bg-purple-600 text-white shadow-sm':(dark?'bg-gray-700 text-gray-300 hover:bg-gray-600':'bg-gray-100 text-gray-600 hover:bg-gray-200'))
+                },fb[1]+' ('+fb[2]+')');
+              })
+            )
+          ),
+
+          // EXPORT/IMPORT
+          h('div',{className:card+' rounded-xl shadow-md p-3 mb-4 flex gap-2'},
+            h('button',{onClick:function(){
+              var blob=new Blob([JSON.stringify(games,null,2)],{type:'application/json'});
+              var url=URL.createObjectURL(blob);
+              var a=document.createElement('a');a.href=url;a.download='gaming-backup-'+Date.now()+'.json';a.click();
+              setTimeout(function(){URL.revokeObjectURL(url);},100);
+            },className:'flex-1 flex items-center justify-center gap-1.5 bg-green-500 text-white p-2 rounded-lg text-xs font-semibold hover:bg-green-600'},
+              h(Ico,{name:'download',size:14,className:'text-white'}),'Export'),
+            h('label',{className:'flex-1 flex items-center justify-center gap-1.5 bg-blue-500 text-white p-2 rounded-lg text-xs font-semibold cursor-pointer hover:bg-blue-600'},
+              h(Ico,{name:'upload',size:14,className:'text-white'}),'Import',
+              h('input',{type:'file',accept:'.json',className:'hidden',onChange:function(e){
+                var file=e.target.files[0];if(!file)return;
+                var r=new FileReader();
+                r.onload=function(ev){try{var d=JSON.parse(ev.target.result);if(confirm('Import '+d.length+' games?'))setGames(d);}catch(err){alert('Invalid file.');}};
+                r.readAsText(file);e.target.value='';
+              }})
+            )
+          ),
+
+          // ADD GAME
+          showAdd
+            ?h(AddForm,{darkMode:dark,onAdd:addGame,onClose:function(){setShowAdd(false);}})
+            :h('button',{onClick:function(){setShowAdd(true);},
+                className:'w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl p-3.5 font-bold shadow-lg flex items-center justify-center gap-2 hover:from-purple-700 hover:to-pink-700 mb-4 text-sm'},
+                h(Ico,{name:'plus',size:18,className:'text-white'}),' Add New Game'),
+
+          // GAME LIST
+          shown.length>0
+            ?h('div',{className:'space-y-2'},
+                shown.map(function(g){
+                  return h(GameCard,{key:g.id,game:g,darkMode:dark,
+                    cover:imgCache[g.id]||null,
+                    expanded:expId===g.id,
+                    setExpanded:function(v){setExpId(v?g.id:null);},
+                    onStatus:upStatus,onRating:upRating,onNotes:upNotes,onDelete:delGame});
+                })
+              )
+            :h('div',{className:card+' rounded-xl shadow-md p-8 text-center'},
+                h('div',{className:'text-5xl mb-3'},'🎮'),
+                h('p',{className:'font-semibold '+ts},q?'No games match "'+q+'"':filter!=='all'?'No games in this category':'Add your first game!'),
+                h('p',{className:'text-xs '+ts+' mt-1'},'Try adjusting your search or filter')
+              ),
+
+          h('div',{className:'text-center text-xs '+ts+' mt-6 mb-4 opacity-60'},
+            'Made with ❤️ for '+CFG.APP_AUTHOR+"'s Gaming Journey • v"+CFG.APP_VERSION)
         ),
 
-        h('div',{className:'text-center text-sm '+ts+' mt-6 mb-4'},
-          'Made with ❤️ for '+CFG.APP_AUTHOR+"'s Gaming Journey",
-          h('div',{className:'text-xs mt-1 opacity-75'},'v'+CFG.APP_VERSION)
+        // ── RIGHT: SIDEBAR ─────────────────────────────────────────
+        h('div',{className:'hidden lg:block w-72 flex-shrink-0 mt-0'},
+          h(Sidebar,{darkMode:dark})
         )
+      ),
+
+      // Sidebar on mobile — below main content
+      h('div',{className:'lg:hidden mt-4'},
+        h(Sidebar,{darkMode:dark})
       )
     );
   }
@@ -561,7 +676,7 @@
     window.addEventListener('beforeinstallprompt',function(e){
       e.preventDefault();d=e;
       var dis=localStorage.getItem('installDis');
-      if(!dis||(Date.now()-parseInt(dis))/86400000>7)setTimeout(function(){var el=document.getElementById('installPrompt');if(el)el.classList.add('show');},3000);
+      if(!dis||(Date.now()-parseInt(dis))/86400000>7)setTimeout(function(){var el=document.getElementById('installPrompt');if(el)el.classList.add('show');},4000);
     });
     document.addEventListener('click',function(e){
       if(e.target.id==='installBtn'&&d){d.prompt();d=null;var el=document.getElementById('installPrompt');if(el)el.classList.remove('show');}
