@@ -167,47 +167,79 @@
     favorite:{icon:'starFill',cls:'text-yellow-500'}
   };
 
+  var STATUS_BTNS=[
+    {key:'not_downloaded', label:'Not DL',   bg:'bg-gray-500',     ring:'ring-gray-400'},
+    {key:'downloaded',     label:'Downloaded',bg:'bg-blue-500',     ring:'ring-blue-400'},
+    {key:'playing',        label:'Playing',   bg:'bg-green-500',    ring:'ring-green-400'},
+    {key:'completed',      label:'Done',      bg:'bg-purple-500',   ring:'ring-purple-400'},
+    {key:'favorite',       label:'★ Fav',     bg:'bg-yellow-500',   ring:'ring-yellow-400'}
+  ];
+
   function GameCard(props){
     var g=props.game, dark=props.darkMode, exp=props.expanded;
     var en=useState(false); var editing=en[0]; var setEditing=en[1];
     var nd=useState(g.notes||''); var draft=nd[0]; var setDraft=nd[1];
 
-    var bgs=dark
-      ?{not_downloaded:'bg-gray-800',downloaded:'bg-blue-900',playing:'bg-green-900',completed:'bg-purple-900',favorite:'bg-yellow-900'}
-      :{not_downloaded:'bg-white',downloaded:'bg-blue-50',playing:'bg-green-50',completed:'bg-purple-50',favorite:'bg-yellow-50'};
-    var bg=bgs[g.status]||bgs.not_downloaded;
     var tx=dark?'text-white':'text-gray-800';
     var ts=dark?'text-gray-400':'text-gray-600';
     var t=CFG.TIERS[g.tier];
-    var si=STATUS_MAP[g.status]||STATUS_MAP.not_downloaded;
     var inp=dark?'bg-gray-700 text-white border-gray-600':'bg-white border-gray-300';
+    var cardBg=dark?'bg-gray-800':'bg-white';
+    var borderColor=dark?'border-gray-700':'border-gray-200';
 
-    return h('div',{className:bg+' rounded-xl shadow-lg overflow-hidden'},
-      h('div',{onClick:function(){props.setExpanded(!exp);},className:'p-4 cursor-pointer active:opacity-80'},
-        h('div',{className:'flex items-start justify-between gap-3'},
-          h('div',{className:'flex items-start gap-3 flex-1 min-w-0'},
-            h('div',{className:'text-3xl flex-shrink-0'},g.icon||'🎮'),
-            h('div',{className:'flex-1 min-w-0'},
-              h('div',{className:'flex items-center gap-2 mb-1 flex-wrap'},
-                h('h3',{className:'font-bold '+tx},g.name),
-                t&&h('span',{className:'px-2 py-0.5 rounded text-xs font-bold '+t.color+' text-white'},t.label)
-              ),
-              h('div',{className:'text-xs '+ts+' space-y-0.5'},
-                h('div',null,'📂 '+g.genre+' • ⚡ '+g.fps+' FPS'),
-                g.hours&&h('div',null,'⏱️ '+g.hours+' hours'),
-                g.rating>0&&h(Stars,{rating:g.rating,small:true,onChange:function(){}})
-              )
+    // Left artwork thumbnail
+    var artwork = g.image
+      ? h('img',{
+          src:g.image, alt:g.name,
+          className:'w-16 h-20 object-cover rounded-lg flex-shrink-0',
+          onError:function(e){e.target.style.display='none';}
+        })
+      : h('div',{
+          className:'w-16 h-20 rounded-lg flex-shrink-0 flex items-center justify-center text-2xl '+(t?t.color+' bg-opacity-80':'bg-gray-400'),
+          style:{background: t ? undefined : '#6b7280'}
+        }, g.icon||'🎮');
+
+    return h('div',{className:cardBg+' rounded-xl shadow-lg overflow-hidden'},
+
+      // ── HEADER ROW (always visible) ──────────────────────────────
+      h('div',{onClick:function(){props.setExpanded(!exp);},className:'p-3 cursor-pointer active:opacity-80'},
+        h('div',{className:'flex items-center gap-3'},
+          artwork,
+          h('div',{className:'flex-1 min-w-0'},
+            h('div',{className:'flex items-center gap-2 mb-1 flex-wrap'},
+              h('h3',{className:'font-bold text-sm '+tx},g.name),
+              t&&h('span',{className:'px-2 py-0.5 rounded text-xs font-bold '+t.color+' text-white'},t.label)
+            ),
+            h('div',{className:'text-xs '+ts},
+              g.genre+' • '+g.fps+' FPS'+(g.hours?' • '+g.hours+'h':'')
+            ),
+            g.rating>0&&h('div',{className:'flex gap-0.5 mt-0.5'},
+              [1,2,3,4,5].map(function(i){return h(Ico,{key:i,name:i<=g.rating?'starFill':'star',size:11,className:i<=g.rating?'text-yellow-500':'text-gray-400'});})
             )
           ),
-          h('div',{className:'flex flex-col items-center gap-2'},
-            h('div',{onClick:function(e){e.stopPropagation();props.onStatus(g.id);},className:'cursor-pointer'},
-              h(Ico,{name:si.icon,size:22,className:si.cls})
-            ),
-            h(Ico,{name:exp?'chevU':'chevD',size:16,className:ts})
-          )
+          h(Ico,{name:exp?'chevU':'chevD',size:16,className:ts+' flex-shrink-0'})
         )
       ),
-      exp&&h('div',{className:'px-4 pb-4 space-y-3 border-t '+(dark?'border-gray-700':'border-gray-200')+' pt-3'},
+
+      // ── STATUS BUTTONS ROW (always visible) ──────────────────────
+      h('div',{
+        onClick:function(e){e.stopPropagation();},
+        className:'px-3 pb-3 flex gap-1'
+      },
+        STATUS_BTNS.map(function(sb){
+          var active=g.status===sb.key;
+          return h('button',{
+            key:sb.key,
+            onClick:function(e){e.stopPropagation();props.onStatus(g.id,sb.key);},
+            className:'flex-1 py-1 rounded text-white text-xs font-semibold transition-all '
+              +sb.bg
+              +(active?' ring-2 '+sb.ring+' ring-offset-1 opacity-100 scale-105':' opacity-40 hover:opacity-75')
+          },sb.label);
+        })
+      ),
+
+      // ── EXPANDED DETAILS ─────────────────────────────────────────
+      exp&&h('div',{className:'px-3 pb-3 space-y-3 border-t '+borderColor+' pt-3'},
         g.desc&&h('p',{className:'text-sm '+(dark?'text-gray-300':'text-gray-700')+' leading-relaxed'},g.desc),
         h('div',null,
           h('p',{className:'text-xs '+ts+' mb-1'},'Your Rating:'),
@@ -296,7 +328,8 @@
             trailer:'https://www.youtube.com/results?search_query='+encodeURIComponent(g.name)+'+official+trailer',
             desc:g.description_raw?g.description_raw.substring(0,200)+'...':'',
             hours:g.playtime?g.playtime+'-'+(g.playtime+5):'',
-            icon:em[gn]||'🎮'
+            icon:em[gn]||'🎮',
+            image:g.background_image||''
           });
           setSearching(false);
         })
@@ -398,7 +431,7 @@
     var bg=dark?'bg-gradient-to-br from-gray-900 via-indigo-900 to-purple-900':'bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900';
     var inp=dark?'bg-gray-700 text-white border-gray-600':'bg-white border-gray-300';
 
-    function upStatus(id){setGames(function(gs){return gs.map(function(g){if(g.id!==id)return g;var i=CFG.STATUS_CYCLE.indexOf(g.status);var ns=CFG.STATUS_CYCLE[(i+1)%CFG.STATUS_CYCLE.length];return Object.assign({},g,{status:ns});});});}
+    function upStatus(id,newStatus){setGames(function(gs){return gs.map(function(g){if(g.id!==id)return g;return Object.assign({},g,{status:newStatus||g.status});});});}
     function upRating(id,r){setGames(function(gs){return gs.map(function(g){return g.id===id?Object.assign({},g,{rating:r}):g;});});}
     function upNotes(id,n){setGames(function(gs){return gs.map(function(g){return g.id===id?Object.assign({},g,{notes:n}):g;});});}
     function delGame(id){setGames(function(gs){return gs.filter(function(g){return g.id!==id;});});setExpId(null);}
@@ -499,7 +532,7 @@
           h('h3',{className:'font-bold mb-3 '+tx},'How to Use'),
           h('div',{className:'space-y-1 text-sm '+ts},
             h('p',null,'• Tap card to expand details'),
-            h('p',null,'• Tap status icon to cycle through statuses'),
+            h('p',null,'• Tap a status button directly on each card'),
             h('p',null,'• Tap stars to rate a game'),
             h('p',null,'• Export/Import to backup your data')
           ),

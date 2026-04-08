@@ -12,7 +12,7 @@
   ============================================
 */
 
-const CACHE_NAME = 'gaming-checklist-v3';
+const CACHE_NAME = 'gaming-checklist-v4';
 
 // Files to cache immediately on install
 const urlsToCache = [
