@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#7c3aed">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="GameList">
   <link rel="manifest" href="manifest.json">
@@ -940,7 +941,7 @@ function App(){
             )
           ),
           h('div',{className:'flex justify-between items-center',style:{fontSize:11,color:'var(--muted)',marginBottom:4}},
-            h('span',null,'Completion'),h('span',{style:{fontWeight:700,color:'var(--tx)'}},(completed+fav)+'/'+total+' ('+pct+'%)'));
+            h('span',null,'Completion'),h('span',{style:{fontWeight:700,color:'var(--tx)'}},(completed+fav)+'/'+total+' ('+pct+'%)')),
           h('div',{className:'pbar'},h('div',{className:'pfill',style:{width:pct+'%'}})),
           // Stats
           h('div',{style:{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:6,marginTop:10}},
