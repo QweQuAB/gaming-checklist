@@ -1,688 +1,1112 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="void">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="description" content="Track your gaming backlog and progress">
   <meta name="theme-color" content="#7c3aed">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="GameList">
   <link rel="manifest" href="manifest.json">
   <title>Q's Gaming Checklist</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
+    /* ── CSS CUSTOM PROPERTIES PER THEME ──────────────────── */
+    :root,[data-theme="void"]{
+      --bg-from:#0f0c29;--bg-via:#302b63;--bg-to:#24243e;
+      --card:#1e1b4b;--card-border:#312e81;--card-hover:#231e6b;
+      --text:#e2e8f0;--subtext:#94a3b8;--muted:#64748b;
+      --accent:#7c3aed;--accent2:#ec4899;--accent-text:#fff;
+      --header-grad:linear-gradient(135deg,#667eea,#764ba2);
+      --btn-neutral:#374151;--btn-neutral-t:#d1d5db;
+      --overlay:rgba(15,12,41,0.82);
+      --input-bg:#312e81;--input-border:#4338ca;--input-text:#e2e8f0;
+      --scrollbar:#7c3aed;
+    }
+    [data-theme="cyber"]{
+      --bg-from:#000000;--bg-via:#0d1117;--bg-to:#001100;
+      --card:#0d1117;--card-border:#00ff4122;--card-hover:#0a1f0a;
+      --text:#00ff41;--subtext:#00cc33;--muted:#009922;
+      --accent:#00ff41;--accent2:#00ccff;--accent-text:#000;
+      --header-grad:linear-gradient(135deg,#003300,#00ff41);
+      --btn-neutral:#0a1f0a;--btn-neutral-t:#00ff41;
+      --overlay:rgba(0,0,0,0.88);
+      --input-bg:#0a1f0a;--input-border:#00ff4155;--input-text:#00ff41;
+      --scrollbar:#00ff41;
+    }
+    [data-theme="arctic"]{
+      --bg-from:#dbeafe;--bg-via:#ede9fe;--bg-to:#fce7f3;
+      --card:#ffffff;--card-border:#e2e8f0;--card-hover:#f8fafc;
+      --text:#1e293b;--subtext:#475569;--muted:#94a3b8;
+      --accent:#3b82f6;--accent2:#8b5cf6;--accent-text:#fff;
+      --header-grad:linear-gradient(135deg,#3b82f6,#8b5cf6);
+      --btn-neutral:#f1f5f9;--btn-neutral-t:#475569;
+      --overlay:rgba(219,234,254,0.75);
+      --input-bg:#f8fafc;--input-border:#cbd5e1;--input-text:#1e293b;
+      --scrollbar:#3b82f6;
+    }
+    [data-theme="ember"]{
+      --bg-from:#1a0500;--bg-via:#2d0f00;--bg-to:#1a0000;
+      --card:#1f0a05;--card-border:#7c2d0c;--card-hover:#2d0f05;
+      --text:#fef3c7;--subtext:#fcd34d;--muted:#d97706;
+      --accent:#dc2626;--accent2:#ea580c;--accent-text:#fff;
+      --header-grad:linear-gradient(135deg,#dc2626,#ea580c);
+      --btn-neutral:#2d0f05;--btn-neutral-t:#fcd34d;
+      --overlay:rgba(26,5,0,0.85);
+      --input-bg:#2d0f05;--input-border:#7c2d0c;--input-text:#fef3c7;
+      --scrollbar:#dc2626;
+    }
+    [data-theme="slate"]{
+      --bg-from:#020617;--bg-via:#0f172a;--bg-to:#020617;
+      --card:#0f172a;--card-border:#1e293b;--card-hover:#1e293b;
+      --text:#f1f5f9;--subtext:#94a3b8;--muted:#64748b;
+      --accent:#0ea5e9;--accent2:#6366f1;--accent-text:#fff;
+      --header-grad:linear-gradient(135deg,#0ea5e9,#6366f1);
+      --btn-neutral:#1e293b;--btn-neutral-t:#94a3b8;
+      --overlay:rgba(2,6,23,0.85);
+      --input-bg:#1e293b;--input-border:#334155;--input-text:#f1f5f9;
+      --scrollbar:#0ea5e9;
+    }
+
+    /* ── BASE ────────────────────────────────────────────── */
     *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;overflow-x:hidden;touch-action:pan-y;background:#1e1b4b;overscroll-behavior-y:contain}
-    .loading-screen{position:fixed;inset:0;background:linear-gradient(135deg,#667eea,#764ba2);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:99999;color:white;transition:opacity .5s}
+    html{scroll-behavior:smooth}
+    body{
+      font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+      overflow-x:hidden;background:var(--bg-from);color:var(--text);
+      overscroll-behavior-y:contain;touch-action:pan-y;
+    }
+    ::-webkit-scrollbar{width:5px;height:5px}
+    ::-webkit-scrollbar-track{background:transparent}
+    ::-webkit-scrollbar-thumb{background:var(--scrollbar);border-radius:99px;opacity:.5}
+
+    /* ── BG SLIDESHOW ────────────────────────────────────── */
+    .bg-slide{
+      position:fixed;inset:0;z-index:0;
+      background-size:cover;background-position:center;
+      transition:background-image 1.5s ease-in-out, opacity 1.5s ease-in-out;
+      opacity:0;
+    }
+    .bg-slide.active{opacity:1}
+    .bg-overlay{
+      position:fixed;inset:0;z-index:1;
+      background:var(--overlay);
+      backdrop-filter:blur(2px);
+    }
+    #root{position:relative;z-index:2}
+
+    /* ── LOADING ─────────────────────────────────────────── */
+    .loading-screen{
+      position:fixed;inset:0;z-index:99999;
+      background:var(--header-grad);
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      color:#fff;transition:opacity .6s;
+    }
     .loading-screen.hide{opacity:0;pointer-events:none}
-    .loader{width:50px;height:50px;border:5px solid rgba(255,255,255,.3);border-top-color:white;border-radius:50%;animation:spin 1s linear infinite;margin-bottom:20px}
-    .loading-screen h2{font-size:24px;margin-bottom:8px;font-weight:bold}
-    .loading-screen p{font-size:14px;opacity:.9}
-    .install-prompt{position:fixed;bottom:20px;left:20px;right:20px;background:linear-gradient(135deg,#667eea,#764ba2);color:white;padding:16px;border-radius:12px;box-shadow:0 10px 25px rgba(0,0,0,.3);display:none;z-index:9999}
-    .install-prompt.show{display:block}
+    .loader{
+      width:52px;height:52px;
+      border:4px solid rgba(255,255,255,.25);border-top-color:#fff;
+      border-radius:50%;animation:spin .9s linear infinite;margin-bottom:20px;
+    }
+    .loading-screen h2{font-size:22px;font-weight:700;margin-bottom:6px}
+    .loading-screen p{font-size:13px;opacity:.8}
+
+    /* ── INSTALL PROMPT ──────────────────────────────────── */
+    .install-prompt{
+      position:fixed;bottom:20px;left:16px;right:16px;
+      background:var(--header-grad);color:#fff;
+      padding:16px;border-radius:16px;
+      box-shadow:0 20px 40px rgba(0,0,0,.4);display:none;z-index:9999;
+    }
+    .install-prompt.show{display:block;animation:slideUp .3s ease}
     .install-content{display:flex;align-items:center;gap:12px;margin-bottom:12px}
-    .install-icon{font-size:32px}
-    .install-text h3{font-size:16px;margin-bottom:4px;font-weight:bold}
+    .install-icon{font-size:30px}
+    .install-text h3{font-size:15px;font-weight:700;margin-bottom:2px}
+    .install-text p{font-size:12px;opacity:.85}
     .install-buttons{display:flex;gap:8px}
-    .install-buttons button{flex:1;padding:10px;border:none;border-radius:8px;font-weight:bold;cursor:pointer;font-size:14px}
-    #installBtn{background:white;color:#764ba2}
-    #dismissBtn{background:rgba(255,255,255,.2);color:white}
+    .install-buttons button{flex:1;padding:10px;border:none;border-radius:10px;font-weight:700;cursor:pointer;font-size:13px}
+    #installBtn{background:#fff;color:#764ba2}
+    #dismissBtn{background:rgba(255,255,255,.2);color:#fff}
+
+    /* ── CARD BASE ───────────────────────────────────────── */
+    .game-card{
+      background:var(--card);border:1px solid var(--card-border);
+      border-radius:14px;overflow:hidden;
+      transition:transform .15s,box-shadow .15s,background .2s;
+    }
+    .game-card:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(0,0,0,.3)}
+
+    /* ── VIEW MODES ──────────────────────────────────────── */
+    .view-list .game-list{display:flex;flex-direction:column;gap:8px}
+    .view-grid .game-list{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+    .view-tiles .game-list{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+    @media(min-width:640px){
+      .view-tiles .game-list{grid-template-columns:repeat(4,1fr)}
+    }
+    @media(min-width:1024px){
+      .view-grid .game-list{grid-template-columns:repeat(2,1fr)}
+      .view-tiles .game-list{grid-template-columns:repeat(3,1fr)}
+    }
+
+    /* ── TILE CARD specific ──────────────────────────────── */
+    .tile-cover{
+      width:100%;aspect-ratio:2/3;
+      object-fit:cover;display:block;
+    }
+    .tile-cover-fallback{
+      width:100%;aspect-ratio:2/3;
+      display:flex;align-items:center;justify-content:center;font-size:2.5rem;
+      background:var(--card-border);
+    }
+
+    /* ── UI COMPONENTS ───────────────────────────────────── */
+    .btn-accent{
+      background:var(--accent);color:var(--accent-text);
+      border:none;border-radius:10px;padding:10px 16px;
+      font-weight:700;cursor:pointer;font-size:13px;
+      transition:opacity .15s,transform .1s;display:inline-flex;align-items:center;gap:6px;
+    }
+    .btn-accent:hover{opacity:.9;transform:translateY(-1px)}
+    .btn-accent2{background:var(--accent2);color:#fff}
+    .card-base{
+      background:var(--card);border:1px solid var(--card-border);
+      border-radius:14px;
+    }
+    .input-base{
+      background:var(--input-bg);border:1px solid var(--input-border);
+      color:var(--input-text);border-radius:8px;padding:8px 12px;
+      font-size:13px;width:100%;outline:none;
+      transition:border-color .15s;
+    }
+    .input-base:focus{border-color:var(--accent)}
+    .tag{
+      display:inline-flex;align-items:center;
+      padding:2px 8px;border-radius:99px;font-size:11px;font-weight:700;
+    }
+
+    /* ── STATUS BUTTONS ──────────────────────────────────── */
+    .status-row{display:flex;gap:4px;padding:0 10px 10px}
+    .status-btn{
+      flex:1;padding:4px 2px;border:none;border-radius:6px;
+      font-size:10px;font-weight:700;cursor:pointer;
+      transition:all .15s;color:#fff;opacity:.35;
+    }
+    .status-btn.active{opacity:1;transform:scale(1.05);box-shadow:0 2px 8px rgba(0,0,0,.3)}
+    .status-btn:hover:not(.active){opacity:.65}
+    .s-notdl{background:#6b7280}
+    .s-downloaded{background:#3b82f6}
+    .s-playing{background:#22c55e}
+    .s-completed{background:#a855f7}
+    .s-favorite{background:#eab308}
+
+    /* ── SIDEBAR ─────────────────────────────────────────── */
+    .sidebar-panel{
+      background:var(--card);border:1px solid var(--card-border);
+      border-radius:14px;overflow:hidden;
+    }
+    .sidebar-tabs{display:flex;gap:4px;padding:10px;overflow-x:auto;border-bottom:1px solid var(--card-border)}
+    .sidebar-tab{
+      padding:5px 10px;border-radius:8px;font-size:11px;font-weight:600;
+      white-space:nowrap;cursor:pointer;border:none;
+      background:var(--btn-neutral);color:var(--btn-neutral-t);
+      transition:all .15s;
+    }
+    .sidebar-tab.active{background:var(--accent);color:var(--accent-text)}
+    .sidebar-item{
+      display:flex;gap:10px;padding:10px 12px;
+      border-bottom:1px solid var(--card-border);
+      transition:background .15s;text-decoration:none;
+    }
+    .sidebar-item:hover{background:var(--card-hover)}
+    .sidebar-item:last-child{border-bottom:none}
+    .sidebar-thumb{
+      width:44px;height:58px;object-fit:cover;
+      border-radius:6px;flex-shrink:0;background:var(--card-border);
+    }
+    .sidebar-thumb-sq{
+      width:44px;height:44px;object-fit:cover;
+      border-radius:6px;flex-shrink:0;background:var(--card-border);
+    }
+    .yt-thumb{width:80px;height:45px;object-fit:cover;border-radius:6px;flex-shrink:0}
+    .sidebar-meta{font-size:11px;color:var(--subtext);margin-top:2px}
+    .sidebar-title{font-size:12px;font-weight:600;color:var(--text);line-height:1.3}
+    .badge-new{
+      display:inline-block;background:var(--accent2);color:#fff;
+      padding:1px 6px;border-radius:99px;font-size:9px;font-weight:700;
+      margin-left:4px;vertical-align:middle;
+    }
+
+    /* ── THEME SWITCHER ──────────────────────────────────── */
+    .theme-swatch{
+      width:22px;height:22px;border-radius:50%;border:2px solid transparent;
+      cursor:pointer;transition:all .15s;flex-shrink:0;
+    }
+    .theme-swatch.active{border-color:#fff;transform:scale(1.2)}
+
+    /* ── NOTIFICATION DOT ────────────────────────────────── */
+    .notif-dot{
+      width:8px;height:8px;background:var(--accent2);
+      border-radius:50%;display:inline-block;margin-left:4px;
+      animation:pulse-dot 2s ease-in-out infinite;
+    }
+    @keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+
+    /* ── ANIMATIONS ──────────────────────────────────────── */
     @keyframes spin{to{transform:rotate(360deg)}}
-    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+    @keyframes slideUp{from{transform:translateY(80px);opacity:0}to{transform:translateY(0);opacity:1}}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+    .fade-in{animation:fadeIn .2s ease both}
     .animate-pulse{animation:pulse 1.5s ease-in-out infinite}
-    ::-webkit-scrollbar{width:6px}
-    ::-webkit-scrollbar-track{background:rgba(0,0,0,.1);border-radius:10px}
-    ::-webkit-scrollbar-thumb{background:rgba(124,58,237,.5);border-radius:10px}
-    .sidebar-scroll{overflow-y:auto;max-height:calc(100vh - 120px)}
-    @media(min-width:1024px){.sidebar-scroll{position:sticky;top:12px}}
+
+    /* ── STICKY SIDEBAR ──────────────────────────────────── */
+    @media(min-width:1024px){
+      .sidebar-sticky{position:sticky;top:12px;max-height:calc(100vh - 24px);overflow-y:auto}
+    }
+    .sidebar-scroll-inner{overflow-y:auto;max-height:520px}
+
+    /* ── PROGRESS BAR ────────────────────────────────────── */
+    .progress-bar{height:6px;border-radius:99px;background:rgba(255,255,255,.15);overflow:hidden}
+    .progress-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .6s ease}
+
+    /* ── NOTIFICATION BANNER ─────────────────────────────── */
+    .notif-banner{
+      display:flex;align-items:center;gap:10px;
+      padding:10px 14px;border-radius:10px;margin-bottom:6px;
+      background:linear-gradient(135deg,var(--accent),var(--accent2));
+      color:#fff;font-size:12px;font-weight:600;text-decoration:none;
+      transition:opacity .15s;
+    }
+    .notif-banner:hover{opacity:.9}
   </style>
 </head>
 <body>
-  <div class="loading-screen" id="loadingScreen">
-    <div class="loader"></div>
-    <h2>🎮 Gaming Checklist</h2>
-    <p>Loading your games...</p>
-  </div>
-  <div class="install-prompt" id="installPrompt">
-    <div class="install-content">
-      <div class="install-icon">🎮</div>
-      <div class="install-text">
-        <h3>Install Gaming Checklist</h3>
-        <p>Get the full app experience</p>
-      </div>
-    </div>
-    <div class="install-buttons">
-      <button id="installBtn">Install</button>
-      <button id="dismissBtn">Later</button>
+
+<div class="loading-screen" id="loadingScreen">
+  <div class="loader"></div>
+  <h2>🎮 Gaming Checklist</h2>
+  <p>Loading your world...</p>
+</div>
+
+<div class="install-prompt" id="installPrompt">
+  <div class="install-content">
+    <div class="install-icon">🎮</div>
+    <div class="install-text">
+      <h3>Install Gaming Checklist</h3>
+      <p>Get the full app experience</p>
     </div>
   </div>
-  <div id="root"></div>
+  <div class="install-buttons">
+    <button id="installBtn">Install App</button>
+    <button id="dismissBtn">Later</button>
+  </div>
+</div>
 
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-  <script>
-  'use strict';
+<!-- BG SLIDESHOW LAYERS -->
+<div class="bg-slide" id="bgA"></div>
+<div class="bg-slide" id="bgB"></div>
+<div class="bg-overlay"></div>
 
-  var RAWG_KEY = 'c2ad28b9e8594e72bf24b87c05bc84c7';
-  function rawg(path){ return fetch('https://api.rawg.io/api/'+path+(path.includes('?')?'&':'?')+'key='+RAWG_KEY).then(function(r){return r.json();}); }
+<div id="root"></div>
 
-  function hideLoader(){ var e=document.getElementById('loadingScreen'); if(e) e.classList.add('hide'); }
-  window.addEventListener('error', function(){ setTimeout(hideLoader,500); });
+<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+<script>
+'use strict';
 
-  var CFG = {
-    APP_NAME:"Q's Gaming Checklist", APP_VERSION:"2.0.0", APP_AUTHOR:"Q",
-    STORE_KEY:'gameChecklistData', DARK_KEY:'darkMode', IMG_KEY:'gameCoverCache',
-    TIERS:{ S:{label:'MUST PLAY',color:'bg-red-500'}, A:{label:'EXCELLENT',color:'bg-orange-500'}, B:{label:'WORTH IT',color:'bg-yellow-500'}, C:{label:'CLASSICS',color:'bg-green-500'}, R:{label:'RACING',color:'bg-blue-500'} },
-    TIER_ORDER:{S:0,A:1,B:2,C:3,R:4}
-  };
+var RAWG_KEY='c2ad28b9e8594e72bf24b87c05bc84c7';
+var RSS2JSON='https://api.rss2json.com/v1/api.json?rss_url=';
+function rawg(p){return fetch('https://api.rawg.io/api/'+p+(p.includes('?')?'&':'?')+'key='+RAWG_KEY).then(function(r){return r.json();});}
+function rss(url){return fetch(RSS2JSON+encodeURIComponent(url)).then(function(r){return r.json();});}
 
-  var GAMES_DEFAULT = [
-    {id:1, name:"Batman: Arkham City",        genre:"Action-Adventure",    fps:"45-60",tier:"S",trailer:"https://youtu.be/9pnK8akbd2M",desc:"Become the Dark Knight in an open-world Gotham prison.",hours:"12-15",icon:"🦇"},
-    {id:2, name:"Deus Ex: Human Revolution",  genre:"RPG/Stealth",         fps:"50-60",tier:"S",trailer:"https://youtu.be/Kq5KWLqUewc",desc:"Cyberpunk RPG where your choices matter.",hours:"20-25",icon:"🤖"},
-    {id:3, name:"The Witcher 2",              genre:"Fantasy RPG",         fps:"40-50",tier:"S",trailer:"https://youtu.be/YJ_KFwNLpl0",desc:"Hunt monsters as Geralt in this dark fantasy.",hours:"25-30",icon:"⚔️"},
-    {id:4, name:"Spec Ops: The Line",         genre:"Third-Person Shooter",fps:"50-60",tier:"S",trailer:"https://youtu.be/3uUsdBfG6o0",desc:"Military shooter exploring war's psychological horrors.",hours:"6-8",icon:"🎖️"},
-    {id:5, name:"Metro: Last Light Redux",    genre:"FPS/Horror",          fps:"35-45",tier:"S",trailer:"https://youtu.be/8jcIYP8LpxA",desc:"Survive post-apocalyptic Moscow metro tunnels.",hours:"10-12",icon:"🚇"},
-    {id:6, name:"Dishonored",                genre:"Stealth/Action",      fps:"50-60",tier:"S",trailer:"https://youtu.be/E1HlYTukh9A",desc:"Supernatural assassin with choice-based gameplay.",hours:"12-15",icon:"🗡️"},
-    {id:7, name:"Tomb Raider (2013)",         genre:"Action-Adventure",    fps:"45-55",tier:"S",trailer:"https://youtu.be/xCe8-1dbXZc",desc:"Lara Croft's origin story on a dangerous island.",hours:"11-14",icon:"🏹"},
-    {id:43,name:"Mass Effect (Legendary)",    genre:"Sci-Fi RPG",          fps:"40-50",tier:"S",trailer:"https://youtu.be/n8i53TtQ6IQ",desc:"Command Shepard and save the galaxy.",hours:"17-20",icon:"🚀"},
-    {id:44,name:"Mass Effect 2 (Legendary)",  genre:"Sci-Fi RPG",          fps:"45-55",tier:"S",trailer:"https://youtu.be/lx9sPQpjgjU",desc:"Assemble a team for a suicide mission.",hours:"24-30",icon:"🚀"},
-    {id:45,name:"Mass Effect 3 (Legendary)",  genre:"Sci-Fi RPG",          fps:"40-50",tier:"S",trailer:"https://youtu.be/eBktyyaV9LY",desc:"Final battle against the Reapers.",hours:"24-30",icon:"🚀"},
-    {id:8, name:"Batman: Arkham Knight",      genre:"Action-Adventure",    fps:"25-35",tier:"A",trailer:"https://youtu.be/wsf78BS9VE0",desc:"Epic conclusion with the Batmobile.",hours:"15-18",icon:"🦇"},
-    {id:11,name:"Far Cry 3",                  genre:"FPS/Open World",      fps:"40-50",tier:"A",trailer:"https://youtu.be/ybdiu8iGsZg",desc:"Survive tropical island with insane Vaas.",hours:"15-20",icon:"🏝️"},
-    {id:20,name:"Doom (2016)",                genre:"FPS",                 fps:"45-55",tier:"A",trailer:"https://youtu.be/NteAPGprDJk",desc:"Rip and tear through demons.",hours:"11-13",icon:"😈"},
-    {id:46,name:"Warhammer 40K: Space Marine",genre:"Third-Person Action", fps:"50-60",tier:"A",trailer:"https://youtu.be/nb50aAFiOpM",desc:"Battle Orks as an Ultramarine.",hours:"7-9",icon:"⚔️"},
-    {id:47,name:"Hades II",                   genre:"Roguelike",           fps:"45-55",tier:"A",trailer:"https://youtu.be/CmxOutSzAAA",desc:"Fight through Underworld as Melinoe.",hours:"20-30",icon:"🔱"},
-    {id:31,name:"Sleeping Dogs",              genre:"Open World Action",   fps:"40-50",tier:"C",status:"completed",trailer:"https://youtu.be/virg-5zeC0M",desc:"Undercover in Hong Kong triads.",hours:"15-20",icon:"🐉"},
-    {id:32,name:"Max Payne 3",                genre:"Third-Person Shooter",fps:"40-50",tier:"C",trailer:"https://youtu.be/5MqFhlyGg1U",desc:"Max's final chapter in Sao Paulo.",hours:"8-10",icon:"🔫"},
-    {id:39,name:"NFS: Hot Pursuit Remastered",genre:"Racing",              fps:"50-60",tier:"R",trailer:"https://youtu.be/qLRy0DjT9J4",desc:"High-speed police chases.",hours:"8-12",icon:"🏎️"},
-    {id:40,name:"GRID 2",                     genre:"Racing",              fps:"50-60",tier:"R",trailer:"https://youtu.be/KsI1NV6hoDk",desc:"Arcade-sim racing balance.",hours:"10-15",icon:"🏁"},
-    {id:48,name:"The Crew",                   genre:"Racing",              fps:"35-45",tier:"R",trailer:"https://youtu.be/k9TcSHzEsqQ",desc:"Drive across entire USA.",hours:"20-30",icon:"🗺️"}
-  ];
+function hideLoader(){var e=document.getElementById('loadingScreen');if(e)e.classList.add('hide');}
+window.addEventListener('error',function(){setTimeout(hideLoader,600);});
 
-  function loadGames(){
-    try{
-      var s=localStorage.getItem(CFG.STORE_KEY);
-      if(!s) return GAMES_DEFAULT.map(function(g){return Object.assign({status:'not_downloaded',rating:0,notes:''},g);});
-      var arr=JSON.parse(s);
-      var merged=GAMES_DEFAULT.map(function(g){
-        var sv=arr.find(function(x){return x.id===g.id;});
-        return sv?Object.assign({},g,{status:sv.status||'not_downloaded',rating:sv.rating||0,notes:sv.notes||''}):Object.assign({status:'not_downloaded',rating:0,notes:''},g);
-      });
-      var custom=arr.filter(function(x){return !GAMES_DEFAULT.find(function(g){return g.id===x.id;});});
-      return merged.concat(custom);
-    }catch(e){return GAMES_DEFAULT.map(function(g){return Object.assign({status:'not_downloaded',rating:0,notes:''},g);});}
+// ── THEMES ────────────────────────────────────────────────────────
+var THEMES=[
+  {id:'void',  name:'Void',   swatch:'linear-gradient(135deg,#667eea,#764ba2)', desc:'Deep Space'},
+  {id:'cyber', name:'Cyber',  swatch:'linear-gradient(135deg,#003300,#00ff41)', desc:'Neon Matrix'},
+  {id:'arctic',name:'Arctic', swatch:'linear-gradient(135deg,#3b82f6,#8b5cf6)', desc:'Clean Ice'},
+  {id:'ember', name:'Ember',  swatch:'linear-gradient(135deg,#dc2626,#ea580c)', desc:'Dark Fire'},
+  {id:'slate', name:'Slate',  swatch:'linear-gradient(135deg,#0ea5e9,#6366f1)', desc:'Pro Dark'}
+];
+
+// ── CONFIG ─────────────────────────────────────────────────────────
+var CFG={
+  APP_NAME:"Q's Gaming Checklist",APP_VERSION:"3.0.0",APP_AUTHOR:"Q",
+  STORE_KEY:'gameChecklistData',DARK_KEY:'darkMode',
+  IMG_KEY:'gameCoverCache',THEME_KEY:'appTheme',VIEW_KEY:'viewMode',
+  BG_KEY:'bgEnabled',NOTIF_KEY:'fitgirlSeen',
+  TIERS:{
+    S:{label:'MUST PLAY',color:'bg-red-500',hex:'#ef4444'},
+    A:{label:'EXCELLENT',color:'bg-orange-500',hex:'#f97316'},
+    B:{label:'WORTH IT', color:'bg-yellow-500',hex:'#eab308'},
+    C:{label:'CLASSICS', color:'bg-green-600', hex:'#16a34a'},
+    R:{label:'RACING',   color:'bg-blue-500',  hex:'#3b82f6'}
+  },
+  TIER_ORDER:{S:0,A:1,B:2,C:3,R:4},
+  STATUS_CYCLE:['not_downloaded','downloaded','playing','completed','favorite']
+};
+
+// ── GAME DATA ──────────────────────────────────────────────────────
+var GAMES_DEFAULT=[
+  {id:1, name:"Batman: Arkham City",        genre:"Action-Adventure",    fps:"45-60",tier:"S",trailer:"https://youtu.be/9pnK8akbd2M",desc:"Become the Dark Knight in an open-world Gotham prison.",hours:"12-15",icon:"🦇"},
+  {id:2, name:"Deus Ex: Human Revolution",  genre:"RPG/Stealth",         fps:"50-60",tier:"S",trailer:"https://youtu.be/Kq5KWLqUewc",desc:"Cyberpunk RPG where your choices matter.",hours:"20-25",icon:"🤖"},
+  {id:3, name:"The Witcher 2",              genre:"Fantasy RPG",         fps:"40-50",tier:"S",trailer:"https://youtu.be/YJ_KFwNLpl0",desc:"Hunt monsters as Geralt in this dark fantasy.",hours:"25-30",icon:"⚔️"},
+  {id:4, name:"Spec Ops: The Line",         genre:"Third-Person Shooter",fps:"50-60",tier:"S",trailer:"https://youtu.be/3uUsdBfG6o0",desc:"Military shooter exploring war's psychological horrors.",hours:"6-8",icon:"🎖️"},
+  {id:5, name:"Metro: Last Light Redux",    genre:"FPS/Horror",          fps:"35-45",tier:"S",trailer:"https://youtu.be/8jcIYP8LpxA",desc:"Survive post-apocalyptic Moscow metro tunnels.",hours:"10-12",icon:"🚇"},
+  {id:6, name:"Dishonored",                genre:"Stealth/Action",      fps:"50-60",tier:"S",trailer:"https://youtu.be/E1HlYTukh9A",desc:"Supernatural assassin with choice-based gameplay.",hours:"12-15",icon:"🗡️"},
+  {id:7, name:"Tomb Raider (2013)",         genre:"Action-Adventure",    fps:"45-55",tier:"S",trailer:"https://youtu.be/xCe8-1dbXZc",desc:"Lara Croft's origin story on a dangerous island.",hours:"11-14",icon:"🏹"},
+  {id:43,name:"Mass Effect (Legendary)",    genre:"Sci-Fi RPG",          fps:"40-50",tier:"S",trailer:"https://youtu.be/n8i53TtQ6IQ",desc:"Command Shepard and save the galaxy.",hours:"17-20",icon:"🚀"},
+  {id:44,name:"Mass Effect 2 (Legendary)",  genre:"Sci-Fi RPG",          fps:"45-55",tier:"S",trailer:"https://youtu.be/lx9sPQpjgjU",desc:"Assemble a team for a suicide mission.",hours:"24-30",icon:"🚀"},
+  {id:45,name:"Mass Effect 3 (Legendary)",  genre:"Sci-Fi RPG",          fps:"40-50",tier:"S",trailer:"https://youtu.be/eBktyyaV9LY",desc:"Final battle against the Reapers.",hours:"24-30",icon:"🚀"},
+  {id:8, name:"Batman: Arkham Knight",      genre:"Action-Adventure",    fps:"25-35",tier:"A",trailer:"https://youtu.be/wsf78BS9VE0",desc:"Epic conclusion with the Batmobile.",hours:"15-18",icon:"🦇"},
+  {id:11,name:"Far Cry 3",                  genre:"FPS/Open World",      fps:"40-50",tier:"A",trailer:"https://youtu.be/ybdiu8iGsZg",desc:"Survive tropical island with insane Vaas.",hours:"15-20",icon:"🏝️"},
+  {id:20,name:"Doom (2016)",                genre:"FPS",                 fps:"45-55",tier:"A",trailer:"https://youtu.be/NteAPGprDJk",desc:"Rip and tear through demons.",hours:"11-13",icon:"😈"},
+  {id:46,name:"Warhammer 40K: Space Marine",genre:"Third-Person Action", fps:"50-60",tier:"A",trailer:"https://youtu.be/nb50aAFiOpM",desc:"Battle Orks as an Ultramarine.",hours:"7-9",icon:"⚔️"},
+  {id:47,name:"Hades II",                   genre:"Roguelike",           fps:"45-55",tier:"A",trailer:"https://youtu.be/CmxOutSzAAA",desc:"Fight through Underworld as Melinoe.",hours:"20-30",icon:"🔱"},
+  {id:31,name:"Sleeping Dogs",              genre:"Open World Action",   fps:"40-50",tier:"C",status:"completed",trailer:"https://youtu.be/virg-5zeC0M",desc:"Undercover in Hong Kong triads.",hours:"15-20",icon:"🐉"},
+  {id:32,name:"Max Payne 3",                genre:"Third-Person Shooter",fps:"40-50",tier:"C",trailer:"https://youtu.be/5MqFhlyGg1U",desc:"Max's final chapter in Sao Paulo.",hours:"8-10",icon:"🔫"},
+  {id:39,name:"NFS: Hot Pursuit Remastered",genre:"Racing",              fps:"50-60",tier:"R",trailer:"https://youtu.be/qLRy0DjT9J4",desc:"High-speed police chases.",hours:"8-12",icon:"🏎️"},
+  {id:40,name:"GRID 2",                     genre:"Racing",              fps:"50-60",tier:"R",trailer:"https://youtu.be/KsI1NV6hoDk",desc:"Arcade-sim racing balance.",hours:"10-15",icon:"🏁"},
+  {id:48,name:"The Crew",                   genre:"Racing",              fps:"35-45",tier:"R",trailer:"https://youtu.be/k9TcSHzEsqQ",desc:"Drive across entire USA.",hours:"20-30",icon:"🗺️"}
+];
+
+// ── STORAGE ────────────────────────────────────────────────────────
+function ls(k,fb){try{var v=localStorage.getItem(k);return v!==null?JSON.parse(v):fb;}catch(e){return fb;}}
+function lset(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+function loadGames(){
+  var s=ls(CFG.STORE_KEY,null);
+  if(!s)return GAMES_DEFAULT.map(function(g){return Object.assign({status:'not_downloaded',rating:0,notes:''},g);});
+  var merged=GAMES_DEFAULT.map(function(g){
+    var sv=(s||[]).find(function(x){return x.id===g.id;});
+    return sv?Object.assign({},g,{status:sv.status||'not_downloaded',rating:sv.rating||0,notes:sv.notes||''}):Object.assign({status:'not_downloaded',rating:0,notes:''},g);
+  });
+  var custom=(s||[]).filter(function(x){return !GAMES_DEFAULT.find(function(g){return g.id===x.id;});});
+  return merged.concat(custom);
+}
+
+// ── SVG ICONS ──────────────────────────────────────────────────────
+var SVG={
+  circle:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>',
+  download:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>',
+  play:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>',
+  check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>',
+  star:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
+  starFill:'<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
+  plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
+  trash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
+  upload:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>',
+  chevD:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>',
+  chevU:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg>',
+  search:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>',
+  sliders:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>',
+  grid:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>',
+  list:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>',
+  tiles:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="4" height="4"/><rect x="10" y="3" width="4" height="4"/><rect x="17" y="3" width="4" height="4"/><rect x="3" y="10" width="4" height="4"/><rect x="10" y="10" width="4" height="4"/><rect x="17" y="10" width="4" height="4"/><rect x="3" y="17" width="4" height="4"/><rect x="10" y="17" width="4" height="4"/><rect x="17" y="17" width="4" height="4"/></svg>',
+  refresh:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>',
+  youtube:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"/><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"/></svg>',
+  bell:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>',
+  link:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>',
+  image:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>',
+  palette:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>',
+  book:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>'
+};
+
+var h=React.createElement, useState=React.useState, useEffect=React.useEffect, useRef=React.useRef;
+
+function Ico(p){
+  var s=p.size||18;
+  return h('span',{className:'inline-flex items-center justify-center flex-shrink-0 '+(p.cls||p.className||''),
+    style:{width:s,height:s},
+    dangerouslySetInnerHTML:{__html:(SVG[p.n]||SVG.circle).replace('viewBox','width="'+s+'" height="'+s+'" viewBox')}
+  });
+}
+
+// ── BACKGROUND SLIDESHOW ───────────────────────────────────────────
+var bgA=document.getElementById('bgA'), bgB=document.getElementById('bgB');
+var _bgImages=[], _bgIdx=0, _bgActive='a';
+function initBg(imgs){
+  _bgImages=imgs.filter(Boolean);
+  if(_bgImages.length===0)return;
+  bgA.style.backgroundImage='url('+_bgImages[0]+')';
+  bgA.classList.add('active');
+}
+function nextBg(){
+  if(_bgImages.length<2)return;
+  _bgIdx=(_bgIdx+1)%_bgImages.length;
+  if(_bgActive==='a'){
+    bgB.style.backgroundImage='url('+_bgImages[_bgIdx]+')';
+    bgB.classList.add('active');
+    setTimeout(function(){bgA.classList.remove('active');},1500);
+    _bgActive='b';
+  } else {
+    bgA.style.backgroundImage='url('+_bgImages[_bgIdx]+')';
+    bgA.classList.add('active');
+    setTimeout(function(){bgB.classList.remove('active');},1500);
+    _bgActive='a';
   }
-  function saveGames(g){try{localStorage.setItem(CFG.STORE_KEY,JSON.stringify(g));}catch(e){}}
-  function loadDark(){try{var v=localStorage.getItem(CFG.DARK_KEY);return v?JSON.parse(v):false;}catch(e){return false;}}
-  function saveDark(v){try{localStorage.setItem(CFG.DARK_KEY,JSON.stringify(v));}catch(e){}}
-  function loadImgCache(){try{var v=localStorage.getItem(CFG.IMG_KEY);return v?JSON.parse(v):{} ;}catch(e){return {};}}
-  function saveImgCache(c){try{localStorage.setItem(CFG.IMG_KEY,JSON.stringify(c));}catch(e){}}
+}
+function clearBg(){bgA.classList.remove('active');bgB.classList.remove('active');}
 
-  var SVG={
-    circle:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>',
-    download:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>',
-    play:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>',
-    check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>',
-    star:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
-    starFill:'<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
-    plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
-    trash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
-    upload:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>',
-    chevD:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>',
-    chevU:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg>',
-    search:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>',
-    sliders:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>',
-    moon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>',
-    sun:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>',
-    youtube:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"/><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"/></svg>',
-    book:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>',
-    refresh:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>'
-  };
+// ── STARS ──────────────────────────────────────────────────────────
+function Stars(p){
+  return h('div',{className:'flex gap-0.5'},
+    [1,2,3,4,5].map(function(i){
+      return h('button',{key:i,
+        onClick:function(e){e.stopPropagation();if(p.onChange)p.onChange(i);},
+        className:'focus:outline-none '+(p.onChange?'hover:scale-110 transition-transform':'cursor-default')},
+        h(Ico,{n:i<=(p.rating||0)?'starFill':'star',size:p.size||14,cls:i<=(p.rating||0)?'text-yellow-400':'text-gray-500'})
+      );
+    })
+  );
+}
 
-  var h=React.createElement;
-  var useState=React.useState;
-  var useEffect=React.useEffect;
-  var useCallback=React.useCallback;
+// ── STATUS BUTTONS ─────────────────────────────────────────────────
+var SB=[
+  {k:'not_downloaded',l:'Not DL',  c:'s-notdl'},
+  {k:'downloaded',    l:'DL\'d',   c:'s-downloaded'},
+  {k:'playing',       l:'Playing', c:'s-playing'},
+  {k:'completed',     l:'Done',    c:'s-completed'},
+  {k:'favorite',      l:'★ Fav',  c:'s-favorite'}
+];
 
-  function Ico(props){
-    var s=props.size||20;
-    return h('span',{
-      className:'inline-flex items-center justify-center flex-shrink-0 '+(props.className||''),
-      style:{width:s,height:s},
-      dangerouslySetInnerHTML:{__html:(SVG[props.name]||SVG.circle).replace('viewBox','width="'+s+'" height="'+s+'" viewBox')}
+// ── GAME CARD (LIST MODE) ──────────────────────────────────────────
+function GameCard(p){
+  var g=p.game, exp=p.expanded, cover=p.cover;
+  var en=useState(false); var editing=en[0]; var setEditing=en[1];
+  var dn=useState(g.notes||''); var draft=dn[0]; var setDraft=dn[1];
+  var t=CFG.TIERS[g.tier];
+  var imgSrc=cover||g.image||'';
+
+  return h('div',{className:'game-card fade-in'},
+    // Header row
+    h('div',{onClick:function(){p.setExpanded(!exp);},className:'flex items-center gap-3 p-3 cursor-pointer'},
+      imgSrc
+        ?h('div',{className:'w-14 h-18 flex-shrink-0 rounded-lg overflow-hidden',style:{width:56,height:74}},
+            h('img',{src:imgSrc,alt:g.name,className:'w-full h-full object-cover',
+              onError:function(e){e.target.parentNode.innerHTML='<div style="width:56px;height:74px;display:flex;align-items:center;justify-content:center;font-size:22px">'+(g.icon||'🎮')+'</div>';}}))
+        :h('div',{className:'rounded-lg flex items-center justify-center text-2xl flex-shrink-0',
+            style:{width:56,height:74,background:t?t.hex+'33':'#ffffff22',border:'1px solid '+(t?t.hex+'44':'#ffffff22')}},
+            g.icon||'🎮'),
+      h('div',{className:'flex-1 min-w-0'},
+        h('div',{className:'flex items-center gap-2 mb-0.5 flex-wrap'},
+          h('span',{className:'font-bold text-sm',style:{color:'var(--text)'}},g.name),
+          t&&h('span',{className:'tag text-white text-xs',style:{background:t.hex,fontSize:10}},t.label)
+        ),
+        h('p',{className:'text-xs truncate',style:{color:'var(--subtext)'}},g.genre+' • '+g.fps+' FPS'+(g.hours?' • '+g.hours+'h':'')),
+        g.rating>0&&h('div',{className:'mt-0.5'},h(Stars,{rating:g.rating,size:11}))
+      ),
+      h(Ico,{n:exp?'chevU':'chevD',size:14,cls:'flex-shrink-0',style:{color:'var(--muted)'}})
+    ),
+    // Status buttons
+    h('div',{className:'status-row',onClick:function(e){e.stopPropagation();}},
+      SB.map(function(sb){
+        return h('button',{key:sb.k,onClick:function(e){e.stopPropagation();p.onStatus(g.id,sb.k);},
+          className:'status-btn '+sb.c+(g.status===sb.k?' active':'')},sb.l);
+      })
+    ),
+    // Expanded
+    exp&&h('div',{className:'px-3 pb-3 space-y-3',style:{borderTop:'1px solid var(--card-border)',paddingTop:12}},
+      g.desc&&h('p',{className:'text-xs leading-relaxed',style:{color:'var(--subtext)'}},g.desc),
+      h('div',null,
+        h('p',{className:'text-xs mb-1',style:{color:'var(--muted)'}},'Rating:'),
+        h(Stars,{rating:g.rating,size:18,onChange:function(r){p.onRating(g.id,r);}})
+      ),
+      h('div',null,
+        h('p',{className:'text-xs mb-1',style:{color:'var(--muted)'}},'Notes:'),
+        editing
+          ?h('div',{className:'space-y-2'},
+              h('textarea',{value:draft,rows:3,maxLength:1000,
+                onChange:function(e){setDraft(e.target.value);},
+                onClick:function(e){e.stopPropagation();},
+                placeholder:'Your thoughts...',className:'input-base',style:{resize:'vertical'}}),
+              h('div',{className:'flex gap-2'},
+                h('button',{onClick:function(e){e.stopPropagation();p.onNotes(g.id,draft);setEditing(false);},
+                  className:'btn-accent flex-1 justify-center',style:{fontSize:12,padding:'6px 10px'}},'Save'),
+                h('button',{onClick:function(e){e.stopPropagation();setDraft(g.notes||'');setEditing(false);},
+                  className:'flex-1 rounded-lg text-xs font-bold py-1.5',style:{background:'var(--btn-neutral)',color:'var(--btn-neutral-t)'}},'Cancel')
+              ))
+          :h('button',{onClick:function(e){e.stopPropagation();setDraft(g.notes||'');setEditing(true);},
+              className:'w-full text-left text-xs p-2 rounded-lg',
+              style:{background:'var(--btn-neutral)',color:g.notes?'var(--text)':'var(--muted)'}},
+              g.notes||'Add notes...')
+      ),
+      h('div',{className:'grid grid-cols-2 gap-2'},
+        g.trailer&&h('a',{href:g.trailer,target:'_blank',rel:'noopener noreferrer',
+          onClick:function(e){e.stopPropagation();},
+          className:'flex items-center justify-center gap-1 p-2 rounded-lg text-white text-xs font-bold',
+          style:{background:'#dc2626'}},h(Ico,{n:'youtube',size:13,cls:'text-white'}),' Trailer'),
+        h('a',{href:'https://www.youtube.com/results?search_query=gameranx+'+encodeURIComponent(g.name)+'+before+you+buy',
+          target:'_blank',rel:'noopener noreferrer',onClick:function(e){e.stopPropagation();},
+          className:'flex items-center justify-center gap-1 p-2 rounded-lg text-white text-xs font-bold',
+          style:{background:'#3b82f6'}},h(Ico,{n:'book',size:13,cls:'text-white'}),' Gameranx')
+      ),
+      g.id>=1000&&h('button',{
+        onClick:function(e){e.stopPropagation();if(confirm('Delete "'+g.name+'"?'))p.onDelete(g.id);},
+        className:'w-full text-xs font-bold p-2 rounded-lg text-white mt-1',style:{background:'#991b1b'}},
+        '🗑 Delete Game')
+    )
+  );
+}
+
+// ── GAME GRID CARD (GRID 2-COL) ────────────────────────────────────
+function GridCard(p){
+  var g=p.game, cover=p.cover;
+  var t=CFG.TIERS[g.tier], imgSrc=cover||g.image||'';
+  return h('div',{className:'game-card fade-in overflow-hidden'},
+    h('div',{className:'relative',style:{height:160}},
+      imgSrc
+        ?h('img',{src:imgSrc,alt:g.name,className:'w-full h-full object-cover',
+            onError:function(e){e.target.style.display='none';}})
+        :h('div',{className:'w-full h-full flex items-center justify-center text-4xl',style:{background:'var(--card-border)'}},g.icon||'🎮'),
+      h('div',{className:'absolute inset-0',style:{background:'linear-gradient(to top,rgba(0,0,0,.8) 0%,transparent 60%)'}}),
+      t&&h('span',{className:'absolute top-2 right-2 tag text-white',style:{background:t.hex,fontSize:9}},t.label),
+      h('div',{className:'absolute bottom-2 left-2 right-2'},
+        h('p',{className:'text-white font-bold text-xs leading-tight truncate'},g.name)
+      )
+    ),
+    h('div',{className:'status-row pt-2'},
+      SB.map(function(sb){
+        return h('button',{key:sb.k,onClick:function(e){e.stopPropagation();p.onStatus(g.id,sb.k);},
+          className:'status-btn '+sb.c+(g.status===sb.k?' active':'')},sb.l);
+      })
+    ),
+    h('div',{className:'px-2 pb-2'},
+      h('p',{className:'text-xs truncate',style:{color:'var(--muted)'}},g.genre+' • '+g.fps+' FPS'),
+      g.rating>0&&h(Stars,{rating:g.rating,size:11})
+    )
+  );
+}
+
+// ── GAME TILE CARD (COMPACT 3-COL) ────────────────────────────────
+function TileCard(p){
+  var g=p.game, cover=p.cover;
+  var t=CFG.TIERS[g.tier], imgSrc=cover||g.image||'';
+  var statusColors={not_downloaded:'#6b7280',downloaded:'#3b82f6',playing:'#22c55e',completed:'#a855f7',favorite:'#eab308'};
+  return h('div',{className:'game-card fade-in overflow-hidden cursor-pointer',onClick:function(){p.setExpanded(!p.expanded);}},
+    h('div',{className:'relative'},
+      imgSrc
+        ?h('img',{src:imgSrc,alt:g.name,className:'tile-cover',onError:function(e){e.target.style.display='none';}})
+        :h('div',{className:'tile-cover-fallback'},g.icon||'🎮'),
+      h('div',{className:'absolute inset-0',style:{background:'linear-gradient(to top,rgba(0,0,0,.75) 0%,transparent 50%)'}}),
+      h('div',{className:'absolute top-1.5 right-1.5 w-3 h-3 rounded-full border-2 border-white',
+        style:{background:statusColors[g.status]||'#6b7280'},title:g.status.replace(/_/g,' ')}),
+      t&&h('span',{className:'absolute top-1.5 left-1.5 tag text-white',style:{background:t.hex,fontSize:8,padding:'1px 5px'}},g.tier),
+      h('p',{className:'absolute bottom-1.5 left-1.5 right-1.5 text-white font-semibold leading-tight',
+        style:{fontSize:9,textShadow:'0 1px 3px rgba(0,0,0,.8)'}},g.name)
+    ),
+    // Quick status tap — cycle on tile
+    h('div',{className:'p-1',onClick:function(e){e.stopPropagation();}},
+      h('div',{className:'flex gap-0.5'},
+        SB.map(function(sb){
+          return h('button',{key:sb.k,onClick:function(e){e.stopPropagation();p.onStatus(g.id,sb.k);},
+            className:'flex-1 rounded',style:{height:4,background:g.status===sb.k?statusColors[sb.k.replace('_','')]:'rgba(255,255,255,.15)',transition:'all .15s'}});
+        })
+      )
+    )
+  );
+}
+
+// ── ADD GAME FORM ──────────────────────────────────────────────────
+function AddForm(p){
+  var fs=useState({name:'',genre:'',fps:'',tier:'C',trailer:'',desc:'',hours:'',icon:'🎮',image:''});
+  var f=fs[0]; var sf=fs[1];
+  var ss=useState(false); var searching=ss[0]; var setSearching=ss[1];
+  var rs=useState([]); var results=rs[0]; var setResults=rs[1];
+  function set(k,v){sf(function(prev){var n=Object.assign({},prev);n[k]=v;return n;});}
+
+  function doSearch(){
+    if(!f.name||f.name.length<2)return;
+    setSearching(true);setResults([]);
+    rawg('games?search='+encodeURIComponent(f.name)+'&page_size=6')
+      .then(function(d){
+        var list=(d.results||[]).map(function(g){return{id:g.id,name:g.name,released:g.released,rating:g.rating,image:g.background_image,genres:(g.genres||[]).map(function(x){return x.name;}).join(', ')};});
+        setResults(list.length?list:[{id:'nr',name:'No results found.',noResult:true}]);
+        setSearching(false);
+      }).catch(function(e){alert('Search failed: '+(e.message||'unknown'));setSearching(false);});
+  }
+
+  function selectGame(id){
+    setSearching(true);setResults([]);
+    rawg('games/'+id)
+      .then(function(g){
+        var age=new Date().getFullYear()-(g.released?parseInt(g.released):2020);
+        var fps=age<=2?'20-30':age<=5?'30-45':age<=8?'40-55':'50-60';
+        var sc=g.metacritic||(g.rating||0)*20;
+        var tier=sc>=90?'S':sc>=80?'A':sc>=70?'B':'C';
+        var em={Action:'⚔️',Adventure:'🗺️',RPG:'🎭',Shooter:'🔫',Racing:'🏎️',Sports:'⚽',Horror:'👻',Indie:'🎨'};
+        var gn=(g.genres||[{name:''}])[0].name;
+        sf({name:g.name,genre:(g.genres||[]).map(function(x){return x.name;}).join(', ')||'Unknown',fps:fps,tier:tier,
+          trailer:'https://www.youtube.com/results?search_query='+encodeURIComponent(g.name)+'+official+trailer',
+          desc:g.description_raw?g.description_raw.substring(0,200)+'...':'',
+          hours:g.playtime?g.playtime+'-'+(g.playtime+5):'',icon:em[gn]||'🎮',image:g.background_image||''});
+        setSearching(false);
+      }).catch(function(e){alert('Failed: '+(e.message||'unknown'));setSearching(false);});
+  }
+
+  function submit(e){
+    e.preventDefault();
+    if(!f.name.trim()){alert('Game name is required!');return;}
+    p.onAdd(Object.assign({},f,{id:Date.now(),status:'not_downloaded',rating:0,notes:''}));
+    p.onClose();
+  }
+
+  return h('div',{className:'card-base p-4 mb-4'},
+    h('div',{className:'flex justify-between items-center mb-4'},
+      h('h3',{className:'font-bold text-base',style:{color:'var(--text)'}},'➕ Add New Game'),
+      h('button',{onClick:p.onClose,style:{color:'var(--muted)',fontSize:20,background:'none',border:'none',cursor:'pointer'}},'✕')
+    ),
+    h('div',{className:'rounded-xl p-3 mb-3',style:{background:'var(--accent)22',border:'1px solid var(--accent)44'}},
+      h('p',{className:'text-xs font-semibold mb-2',style:{color:'var(--accent)'}},'🔍 Search RAWG Game Database'),
+      h('div',{className:'flex gap-2'},
+        h('input',{type:'text',placeholder:'Type game name...',value:f.name,disabled:searching,
+          className:'input-base flex-1',
+          onChange:function(e){set('name',e.target.value);},
+          onKeyDown:function(e){if(e.key==='Enter'){e.preventDefault();doSearch();}}}),
+        h('button',{type:'button',onClick:doSearch,disabled:searching||!f.name,
+          className:'btn-accent',style:{opacity:searching||!f.name?.5:1}},
+          searching?'⏳':'🔍')
+      )
+    ),
+    results.length>0&&h('div',{className:'rounded-xl border p-2 mb-3 max-h-52 overflow-y-auto',style:{borderColor:'var(--card-border)',background:'var(--card)'}},
+      results.map(function(g){
+        if(g.noResult)return h('p',{key:'nr',className:'text-center text-xs py-3',style:{color:'var(--muted)'}},g.name);
+        return h('button',{key:g.id,type:'button',onClick:function(){selectGame(g.id);},
+          className:'w-full text-left p-2 rounded-lg mb-1 flex items-center gap-2',
+          style:{background:'var(--card-hover)'}},
+          g.image&&h('img',{src:g.image,alt:'',className:'w-9 h-12 object-cover rounded flex-shrink-0',onError:function(e){e.target.style.display='none';}}),
+          h('div',{className:'flex-1 min-w-0'},
+            h('p',{className:'text-xs font-semibold truncate',style:{color:'var(--text)'}},g.name),
+            h('p',{className:'text-xs truncate',style:{color:'var(--muted)'}},g.released||'')
+          ),
+          g.rating&&h('span',{className:'text-xs flex-shrink-0',style:{color:'#eab308'}},'⭐'+parseFloat(g.rating).toFixed(1))
+        );
+      }),
+      h('button',{type:'button',onClick:function(){setResults([]);},className:'w-full text-xs mt-1',style:{color:'var(--muted)'}},'✕ Clear')
+    ),
+    h('form',{onSubmit:submit,className:'space-y-2'},
+      h('div',{className:'grid grid-cols-2 gap-2'},
+        h('input',{type:'text',placeholder:'Genre',value:f.genre,onChange:function(e){set('genre',e.target.value);},className:'input-base'}),
+        h('input',{type:'text',placeholder:'FPS (e.g. 30-60)',value:f.fps,onChange:function(e){set('fps',e.target.value);},className:'input-base'})
+      ),
+      h('div',{className:'grid grid-cols-2 gap-2'},
+        h('input',{type:'text',placeholder:'Hours',value:f.hours,onChange:function(e){set('hours',e.target.value);},className:'input-base'}),
+        h('input',{type:'text',placeholder:'Emoji icon',value:f.icon,onChange:function(e){set('icon',e.target.value);},className:'input-base'})
+      ),
+      h('select',{value:f.tier,onChange:function(e){set('tier',e.target.value);},className:'input-base'},
+        Object.keys(CFG.TIERS).map(function(t){return h('option',{key:t,value:t},t+' — '+CFG.TIERS[t].label);})),
+      h('input',{type:'url',placeholder:'Trailer URL',value:f.trailer,onChange:function(e){set('trailer',e.target.value);},className:'input-base'}),
+      h('textarea',{placeholder:'Description',value:f.desc,onChange:function(e){set('desc',e.target.value);},rows:2,className:'input-base',style:{resize:'vertical'}}),
+      h('div',{className:'flex gap-2 pt-1'},
+        h('button',{type:'submit',className:'btn-accent flex-1 justify-center',style:{padding:'10px 0'}},'✓ Save Game'),
+        h('button',{type:'button',onClick:p.onClose,className:'flex-1 rounded-xl text-sm font-bold py-2',
+          style:{background:'var(--btn-neutral)',color:'var(--btn-neutral-t)'}},'Cancel')
+      )
+    )
+  );
+}
+
+// ── SIDEBAR ────────────────────────────────────────────────────────
+var YTGAMERANX='https://www.youtube.com/feeds/videos.xml?channel_id=UCK-65DO2oOxxMwphl2tMcaQ';
+var FITGIRL_RSS='https://fitgirl-repacks.site/feed/';
+var SIDEBAR_TABS=[
+  {k:'trending',  l:'🔥 Trending',  ep:'games?ordering=-added&page_size=10',         type:'rawg'},
+  {k:'toprated',  l:'⭐ Top',       ep:'games?ordering=-rating&metacritic=75,100&page_size=10',type:'rawg'},
+  {k:'new',       l:'🆕 New',       ep:'games?ordering=-released&page_size=10',       type:'rawg'},
+  {k:'upcoming',  l:'📅 Upcoming',  ep:'games?ordering=-added&dates=2025-01-01,2026-12-31&page_size=10',type:'rawg'},
+  {k:'gameranx',  l:'🎬 Gameranx',  ep:YTGAMERANX,                                   type:'rss'},
+  {k:'fitgirl',   l:'🎮 FitGirl',   ep:FITGIRL_RSS,                                  type:'rss'},
+  {k:'links',     l:'🔗 Links',     ep:'',                                            type:'links'}
+];
+
+function Sidebar(p){
+  var ts=useState('trending'); var tab=ts[0]; var setTab=ts[1];
+  var ld=useState([]); var items=ld[0]; var setItems=ld[1];
+  var ls2=useState(false); var loading=ls2[0]; var setLoading=ls2[1];
+  var rk=useState(0); var refreshKey=rk[0]; var setRefreshKey=rk[1];
+
+  useEffect(function(){
+    var t=SIDEBAR_TABS.find(function(x){return x.k===tab;});
+    if(!t||t.type==='links'){setItems([]);setLoading(false);return;}
+    setLoading(true);setItems([]);
+    var fetcher=t.type==='rawg'?rawg(t.ep):rss(t.ep).then(function(d){return {results:(d.items||[]).slice(0,10)};});
+    fetcher.then(function(d){setItems(d.results||[]);setLoading(false);}).catch(function(){setLoading(false);});
+  },[tab,refreshKey]);
+
+  var currentTab=SIDEBAR_TABS.find(function(x){return x.k===tab;})||SIDEBAR_TABS[0];
+
+  function renderItem(item,i){
+    if(currentTab.type==='rawg'){
+      return h('a',{key:item.id||i,
+        href:'https://rawg.io/games/'+item.slug,target:'_blank',rel:'noopener noreferrer',
+        className:'sidebar-item'},
+        item.background_image
+          ?h('img',{src:item.background_image,alt:'',className:'sidebar-thumb',onError:function(e){e.target.style.display='none';}})
+          :h('div',{className:'sidebar-thumb flex items-center justify-center text-xl'},'🎮'),
+        h('div',{className:'flex-1 min-w-0'},
+          h('p',{className:'sidebar-title'},item.name),
+          item.released&&h('p',{className:'sidebar-meta'},item.released),
+          (item.genres||[]).length>0&&h('p',{className:'sidebar-meta truncate'},(item.genres||[]).slice(0,2).map(function(g){return g.name;}).join(', ')),
+          h('div',{className:'flex items-center gap-2 mt-0.5'},
+            item.rating>0&&h('span',{className:'sidebar-meta'},'⭐ '+parseFloat(item.rating).toFixed(1)),
+            item.metacritic&&h('span',{className:'tag text-white',style:{background:'#16a34a',fontSize:9}},item.metacritic)
+          )
+        )
+      );
+    }
+    if(currentTab.k==='gameranx'){
+      return h('a',{key:i,href:item.link||item.url,target:'_blank',rel:'noopener noreferrer',className:'sidebar-item'},
+        h('div',{className:'relative flex-shrink-0'},
+          item.thumbnail
+            ?h('img',{src:item.thumbnail,alt:'',className:'yt-thumb',onError:function(e){e.target.style.display='none';}})
+            :h('div',{className:'yt-thumb flex items-center justify-center',style:{background:'#dc2626',borderRadius:6}},
+                h(Ico,{n:'youtube',size:24,cls:'text-white'})),
+          h('div',{className:'absolute inset-0 flex items-center justify-center',
+            style:{background:'rgba(0,0,0,.2)',borderRadius:6}},
+            h('div',{style:{width:0,height:0,borderTop:'6px solid transparent',borderBottom:'6px solid transparent',borderLeft:'10px solid rgba(255,255,255,.9)'}}))
+        ),
+        h('div',{className:'flex-1 min-w-0'},
+          h('p',{className:'sidebar-title'},item.title),
+          h('p',{className:'sidebar-meta'},(item.pubDate||'').substring(0,10))
+        )
+      );
+    }
+    if(currentTab.k==='fitgirl'){
+      var isNew=(Date.now()-new Date(item.pubDate).getTime())<3*24*3600000;
+      return h('a',{key:i,href:item.link||item.url,target:'_blank',rel:'noopener noreferrer',className:'sidebar-item'},
+        h('div',{className:'sidebar-thumb-sq flex items-center justify-center text-xl flex-shrink-0',style:{background:'var(--card-border)',borderRadius:6}},'🎮'),
+        h('div',{className:'flex-1 min-w-0'},
+          h('p',{className:'sidebar-title'},
+            item.title,
+            isNew&&h('span',{className:'badge-new'},'NEW')
+          ),
+          h('p',{className:'sidebar-meta'},(item.pubDate||'').substring(0,10))
+        )
+      );
+    }
+    return null;
+  }
+
+  function renderLinks(){
+    var links=[
+      {label:'🎬 Gameranx YouTube',url:'https://www.youtube.com/@gameranx',desc:'Before You Buy series & game reviews',color:'#dc2626'},
+      {label:'🎮 FitGirl Repacks',url:'https://fitgirl-repacks.site',desc:'Latest game repacks & new releases',color:'#7c3aed'},
+      {label:'🔗 GameLinked',url:'https://gamelinked.gg',desc:'Game discovery & social tracking',color:'#0ea5e9'},
+      {label:'⏱️ HowLongToBeat',url:'https://howlongtobeat.com',desc:'How long to beat any game',color:'#16a34a'},
+      {label:'💬 Reddit r/patientgamers',url:'https://reddit.com/r/patientgamers',desc:'Gaming discussions & deals',color:'#ea580c'},
+      {label:'📊 RAWG.io',url:'https://rawg.io',desc:'The biggest game database',color:'#6366f1'},
+      {label:'📺 Before You Buy',url:'https://www.youtube.com/playlist?list=PLB1lbS5lFekuHFDPDjIK-LoA2v5kB1qxJ',desc:'Full Gameranx BYB playlist',color:'#dc2626'},
+      {label:'🛒 Steam Store',url:'https://store.steampowered.com',desc:'PC gaming storefront',color:'#1b2838'}
+    ];
+    return links.map(function(lnk,i){
+      return h('a',{key:i,href:lnk.url,target:'_blank',rel:'noopener noreferrer',
+        className:'sidebar-item',style:{display:'flex',alignItems:'center',gap:10}},
+        h('div',{className:'w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 text-sm',
+          style:{background:lnk.color+'22',border:'1px solid '+lnk.color+'44'}},lnk.label.split(' ')[0]),
+        h('div',{className:'flex-1 min-w-0'},
+          h('p',{className:'sidebar-title'},lnk.label.split(' ').slice(1).join(' ')),
+          h('p',{className:'sidebar-meta truncate'},lnk.desc)
+        ),
+        h(Ico,{n:'link',size:12,cls:'flex-shrink-0',style:{color:'var(--muted)'}})
+      );
     });
   }
 
-  function Stars(props){
-    var r=props.rating||0;
-    return h('div',{className:'flex gap-0.5'},
-      [1,2,3,4,5].map(function(i){
-        return h('button',{key:i,onClick:function(e){e.stopPropagation();if(props.onChange)props.onChange(i);},className:'focus:outline-none '+(props.onChange?'hover:scale-110 transition-transform':'cursor-default')},
-          h(Ico,{name:i<=r?'starFill':'star',size:props.size||16,className:i<=r?'text-yellow-500':'text-gray-400'})
-        );
+  return h('div',{className:'sidebar-panel'},
+    h('div',{className:'flex items-center justify-between px-3 pt-3 pb-1'},
+      h('span',{className:'text-xs font-bold',style:{color:'var(--text)'}},'🌐 Gaming World'),
+      h('button',{onClick:function(){setRefreshKey(function(k){return k+1;});},
+        className:'p-1.5 rounded-lg transition-colors',
+        style:{color:'var(--muted)',background:'transparent'},
+        title:'Refresh'},
+        h(Ico,{n:'refresh',size:14,cls:loading?'animate-pulse':''}))
+    ),
+    h('div',{className:'sidebar-tabs'},
+      SIDEBAR_TABS.map(function(t){
+        return h('button',{key:t.k,onClick:function(){setTab(t.k);},
+          className:'sidebar-tab'+(tab===t.k?' active':'')},t.l);
       })
-    );
+    ),
+    h('div',{className:'sidebar-scroll-inner divide-y',style:{borderColor:'var(--card-border)'}},
+      loading
+        ?[1,2,3,4].map(function(i){
+            return h('div',{key:i,className:'p-3 flex gap-2 items-center'},
+              h('div',{className:'rounded-lg flex-shrink-0 animate-pulse',style:{width:44,height:58,background:'var(--card-border)'}}),
+              h('div',{className:'flex-1 space-y-2'},
+                h('div',{className:'h-2.5 rounded animate-pulse',style:{background:'var(--card-border)',width:'70%'}}),
+                h('div',{className:'h-2 rounded animate-pulse',style:{background:'var(--card-border)',width:'50%'}}),
+                h('div',{className:'h-2 rounded animate-pulse',style:{background:'var(--card-border)',width:'35%'}})
+              )
+            );
+          })
+        :currentTab.type==='links'
+          ?renderLinks()
+          :items.length===0
+            ?h('div',{className:'p-6 text-center text-xs',style:{color:'var(--muted)'}},'No data — try refreshing')
+            :items.map(function(item,i){return renderItem(item,i);})
+    )
+  );
+}
+
+// ── APP ────────────────────────────────────────────────────────────
+function App(){
+  var gs=useState(function(){return loadGames();}); var games=gs[0]; var setGames=gs[1];
+  var th=useState(function(){return ls(CFG.THEME_KEY,'void');}); var theme=th[0]; var setTheme=th[1];
+  var vw=useState(function(){return ls(CFG.VIEW_KEY,'list');}); var view=vw[0]; var setView=vw[1];
+  var bg=useState(function(){return ls(CFG.BG_KEY,true);}); var bgOn=bg[0]; var setBgOn=bg[1];
+  var es=useState(null); var expId=es[0]; var setExpId=es[1];
+  var fs=useState('all'); var filter=fs[0]; var setFilter=fs[1];
+  var qs=useState(''); var q=qs[0]; var setQ=qs[1];
+  var ss=useState('tier'); var sort=ss[0]; var setSort=ss[1];
+  var shs=useState(false); var showSort=shs[0]; var setShowSort=shs[1];
+  var as=useState(false); var showAdd=as[0]; var setShowAdd=as[1];
+  var sp=useState(false); var showThemes=sp[0]; var setShowThemes=sp[1];
+  var ic=useState(function(){return ls(CFG.IMG_KEY,{});}); var imgCache=ic[0]; var setImgCache=ic[1];
+
+  useEffect(function(){lset(CFG.STORE_KEY,games);},[games]);
+  useEffect(function(){lset(CFG.THEME_KEY,theme);document.documentElement.setAttribute('data-theme',theme);},[theme]);
+  useEffect(function(){lset(CFG.VIEW_KEY,view);},[view]);
+  useEffect(function(){lset(CFG.BG_KEY,bgOn);if(!bgOn)clearBg();},[bgOn]);
+  useEffect(function(){lset(CFG.IMG_KEY,imgCache);},[imgCache]);
+  useEffect(function(){setTimeout(hideLoader,500);},[]);
+
+  // Background slideshow setup
+  useEffect(function(){
+    if(!bgOn)return;
+    var imgs=games.map(function(g){return imgCache[g.id]||g.image||'';}).filter(Boolean);
+    if(imgs.length>0){initBg(imgs);}
+    var t=setInterval(nextBg,7000);
+    return function(){clearInterval(t);};
+  },[bgOn,imgCache]);
+
+  // Auto-fetch missing cover art
+  useEffect(function(){
+    var missing=games.filter(function(g){return !imgCache[g.id]&&!g.image;});
+    if(!missing.length)return;
+    var i=0;
+    function next(){
+      if(i>=missing.length)return;
+      var g=missing[i++];
+      rawg('games?search='+encodeURIComponent(g.name)+'&page_size=1&exact=true')
+        .then(function(d){
+          var r=(d.results||[])[0];
+          if(r&&r.background_image){
+            setImgCache(function(prev){var n=Object.assign({},prev);n[g.id]=r.background_image;return n;});
+          }
+        }).catch(function(){}).then(function(){setTimeout(next,400);});
+    }
+    next();
+  },[]);
+
+  var shown=games.filter(function(g){
+    if(filter!=='all'&&g.status!==filter)return false;
+    if(q){var t=q.toLowerCase();return g.name.toLowerCase().includes(t)||g.genre.toLowerCase().includes(t)||(g.desc||'').toLowerCase().includes(t);}
+    return true;
+  }).sort(function(a,b){
+    if(sort==='name')return a.name.localeCompare(b.name);
+    if(sort==='fps')return parseInt((b.fps||'0').split('-').pop()||0)-parseInt((a.fps||'0').split('-').pop()||0);
+    if(sort==='rating')return(b.rating||0)-(a.rating||0);
+    var o=CFG.TIER_ORDER;
+    if(o[a.tier]!==o[b.tier])return o[a.tier]-o[b.tier];
+    return a.name.localeCompare(b.name);
+  });
+
+  var total=games.length;
+  var playing=games.filter(function(g){return g.status==='playing';}).length;
+  var completed=games.filter(function(g){return g.status==='completed';}).length;
+  var fav=games.filter(function(g){return g.status==='favorite';}).length;
+  var notdl=games.filter(function(g){return g.status==='not_downloaded';}).length;
+  var dld=games.filter(function(g){return g.status==='downloaded';}).length;
+  var pct=total>0?Math.round(((completed+fav)/total)*100):0;
+
+  function upStatus(id,ns){setGames(function(gs){return gs.map(function(g){return g.id===id?Object.assign({},g,{status:ns}):g;});});}
+  function upRating(id,r){setGames(function(gs){return gs.map(function(g){return g.id===id?Object.assign({},g,{rating:r}):g;});});}
+  function upNotes(id,n){setGames(function(gs){return gs.map(function(g){return g.id===id?Object.assign({},g,{notes:n}):g;});});}
+  function delGame(id){setGames(function(gs){return gs.filter(function(g){return g.id!==id;});});setExpId(null);}
+  function addGame(gd){setGames(function(gs){return gs.concat([gd]);});}
+
+  var filters=[['all','All',total],['not_downloaded','Not DL',notdl],['downloaded',"DL'd",dld],['playing','Playing',playing],['completed','Done',completed],['favorite','Fav',fav]];
+  var views=[['list','list','List'],['grid','grid','Grid'],['tiles','tiles','Tiles']];
+
+  function cardProps(g){
+    return {key:g.id,game:g,cover:imgCache[g.id]||null,
+      expanded:expId===g.id,setExpanded:function(v){setExpId(v?g.id:null);},
+      onStatus:upStatus,onRating:upRating,onNotes:upNotes,onDelete:delGame};
   }
 
-  var STATUS_BTNS=[
-    {key:'not_downloaded',label:'Not DL',   activeBg:'bg-gray-500',   inactiveBg:'bg-gray-200',   inactiveText:'text-gray-500'},
-    {key:'downloaded',    label:'Downloaded',activeBg:'bg-blue-500',   inactiveBg:'bg-blue-100',   inactiveText:'text-blue-400'},
-    {key:'playing',       label:'Playing',   activeBg:'bg-green-500',  inactiveBg:'bg-green-100',  inactiveText:'text-green-400'},
-    {key:'completed',     label:'Done',      activeBg:'bg-purple-500', inactiveBg:'bg-purple-100', inactiveText:'text-purple-400'},
-    {key:'favorite',      label:'★ Fav',     activeBg:'bg-yellow-500', inactiveBg:'bg-yellow-100', inactiveText:'text-yellow-500'}
-  ];
+  return h('div',{className:'min-h-screen p-3 view-'+view,style:{background:'linear-gradient(135deg,var(--bg-from),var(--bg-via),var(--bg-to))'}},
+    h('div',{className:'max-w-7xl mx-auto lg:flex lg:gap-4 lg:items-start'},
 
-  // ── GAME CARD ────────────────────────────────────────────────────
-  function GameCard(props){
-    var g=props.game, dark=props.darkMode, exp=props.expanded;
-    var cover=props.cover;
-    var en=useState(false); var editing=en[0]; var setEditing=en[1];
-    var nd=useState(g.notes||''); var draft=nd[0]; var setDraft=nd[1];
+      // ── MAIN COLUMN ──────────────────────────────────────────────
+      h('div',{className:'flex-1 min-w-0 space-y-3'},
 
-    var tx=dark?'text-white':'text-gray-800';
-    var ts=dark?'text-gray-400':'text-gray-500';
-    var t=CFG.TIERS[g.tier];
-    var inp=dark?'bg-gray-700 text-white border-gray-600':'bg-white border-gray-300';
-    var cardBg=dark?'bg-gray-800':'bg-white';
-    var border=dark?'border-gray-700':'border-gray-100';
-
-    // Cover image — use fetched cover, then g.image, then emoji fallback
-    var imgSrc = cover || g.image || '';
-    var artwork = imgSrc
-      ? h('div',{className:'w-16 h-20 flex-shrink-0 rounded-lg overflow-hidden bg-gray-200'},
-          h('img',{src:imgSrc,alt:g.name,className:'w-full h-full object-cover',onError:function(e){e.target.parentNode.innerHTML='<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:24px;background:'+(t?'':' #6b7280')+'">'+( g.icon||'🎮')+'</div>';}}))
-      : h('div',{className:'w-16 h-20 flex-shrink-0 rounded-lg flex items-center justify-center text-3xl '+(t?t.color:'bg-gray-400 text-white')},g.icon||'🎮');
-
-    return h('div',{className:cardBg+' rounded-xl shadow-md overflow-hidden border '+border},
-
-      // HEADER — click to expand
-      h('div',{onClick:function(){props.setExpanded(!exp);},className:'p-3 cursor-pointer active:opacity-80'},
-        h('div',{className:'flex items-center gap-3'},
-          artwork,
-          h('div',{className:'flex-1 min-w-0'},
-            h('div',{className:'flex items-center gap-2 mb-0.5 flex-wrap'},
-              h('h3',{className:'font-bold text-sm leading-tight '+tx},g.name),
-              t&&h('span',{className:'px-1.5 py-0.5 rounded text-xs font-bold '+t.color+' text-white whitespace-nowrap'},t.label)
+        // HEADER
+        h('div',{className:'card-base p-4'},
+          h('div',{className:'flex items-start justify-between gap-2 mb-3'},
+            h('div',null,
+              h('h1',{className:'font-black text-xl leading-tight',style:{color:'var(--text)'}},CFG.APP_NAME),
+              h('p',{className:'text-xs mt-0.5',style:{color:'var(--muted)'}},'Tap status buttons to track • Tap card to expand')
             ),
-            h('p',{className:'text-xs '+ts},g.genre+' • '+g.fps+' FPS'+(g.hours?' • '+g.hours+'h':'')),
-            g.rating>0&&h('div',{className:'mt-0.5'},h(Stars,{rating:g.rating,size:11}))
-          ),
-          h(Ico,{name:exp?'chevU':'chevD',size:16,className:ts})
-        )
-      ),
-
-      // STATUS BUTTONS — always visible, one row
-      h('div',{className:'px-3 pb-3 flex gap-1',onClick:function(e){e.stopPropagation();}},
-        STATUS_BTNS.map(function(sb){
-          var active=g.status===sb.key;
-          return h('button',{
-            key:sb.key,
-            onClick:function(e){e.stopPropagation();props.onStatus(g.id,sb.key);},
-            className:'flex-1 py-1 rounded text-xs font-semibold transition-all '
-              +(active?(sb.activeBg+' text-white shadow-sm scale-105'):(sb.inactiveBg+' '+sb.inactiveText+' hover:opacity-80'))
-          },sb.label);
-        })
-      ),
-
-      // EXPANDED DETAILS
-      exp&&h('div',{className:'px-3 pb-3 border-t '+border+' pt-3 space-y-3'},
-        g.desc&&h('p',{className:'text-sm '+(dark?'text-gray-300':'text-gray-600')+' leading-relaxed'},g.desc),
-        h('div',null,
-          h('p',{className:'text-xs '+ts+' mb-1'},'Your Rating:'),
-          h(Stars,{rating:g.rating,size:20,onChange:function(r){props.onRating(g.id,r);}})
-        ),
-        h('div',null,
-          h('p',{className:'text-xs '+ts+' mb-1'},'Notes:'),
-          editing
-            ?h('div',{className:'space-y-2'},
-                h('textarea',{value:draft,rows:3,maxLength:1000,
-                  onChange:function(e){setDraft(e.target.value);},
-                  onClick:function(e){e.stopPropagation();},
-                  placeholder:'Add thoughts...',
-                  className:'w-full p-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 '+inp}),
-                h('div',{className:'flex gap-2'},
-                  h('button',{onClick:function(e){e.stopPropagation();props.onNotes(g.id,draft);setEditing(false);},className:'flex-1 bg-green-500 text-white p-1.5 rounded text-sm font-bold'},'Save'),
-                  h('button',{onClick:function(e){e.stopPropagation();setDraft(g.notes||'');setEditing(false);},className:'flex-1 bg-gray-300 text-gray-700 p-1.5 rounded text-sm font-bold'},'Cancel')
+            h('div',{className:'flex items-center gap-1.5 flex-shrink-0'},
+              // BG toggle
+              h('button',{onClick:function(){setBgOn(!bgOn);},title:bgOn?'Disable artwork BG':'Enable artwork BG',
+                className:'p-2 rounded-lg text-xs',style:{background:bgOn?'var(--accent)22':'var(--btn-neutral)',color:bgOn?'var(--accent)':'var(--muted)'}},
+                h(Ico,{n:'image',size:14})),
+              // Theme picker
+              h('div',{className:'relative'},
+                h('button',{onClick:function(){setShowThemes(!showThemes);},
+                  className:'p-2 rounded-lg',style:{background:'var(--btn-neutral)',color:'var(--muted)'}},
+                  h(Ico,{n:'palette',size:14})),
+                showThemes&&h('div',{className:'absolute right-0 top-9 card-base p-3 z-50 fade-in',style:{minWidth:180,boxShadow:'0 16px 40px rgba(0,0,0,.4)'}},
+                  h('p',{className:'text-xs font-bold mb-2',style:{color:'var(--text)'}},'Choose Theme'),
+                  THEMES.map(function(t){
+                    return h('button',{key:t.id,onClick:function(){setTheme(t.id);setShowThemes(false);},
+                      className:'flex items-center gap-2 w-full p-2 rounded-lg mb-1 text-left',
+                      style:{background:theme===t.id?'var(--accent)22':'transparent'}},
+                      h('div',{className:'w-5 h-5 rounded-full flex-shrink-0',style:{background:t.swatch}}),
+                      h('div',null,
+                        h('p',{className:'text-xs font-semibold',style:{color:'var(--text)'}},t.name),
+                        h('p',{style:{fontSize:10,color:'var(--muted)'}},t.desc)
+                      ),
+                      theme===t.id&&h('span',{className:'ml-auto text-xs',style:{color:'var(--accent)'}},'✓')
+                    );
+                  })
                 )
               )
-            :h('button',{onClick:function(e){e.stopPropagation();setDraft(g.notes||'');setEditing(true);},
-                className:'w-full p-2 border rounded text-sm text-left '+(dark?'bg-gray-700 border-gray-600 text-gray-300':'bg-gray-50 border-gray-200 text-gray-500 hover:bg-gray-100')},
-                g.notes||'Add notes...')
-        ),
-        h('div',{className:'flex flex-col gap-2'},
-          g.trailer&&h('a',{href:g.trailer,target:'_blank',rel:'noopener noreferrer',
-            onClick:function(e){e.stopPropagation();},
-            className:'flex items-center justify-center gap-2 bg-red-500 text-white p-2.5 rounded-lg font-bold text-sm hover:bg-red-600'},
-            h(Ico,{name:'youtube',size:16,className:'text-white'}),' Watch Trailer'),
-          h('a',{href:'https://www.youtube.com/results?search_query=gameranx+'+encodeURIComponent(g.name)+'+before+you+buy',
-            target:'_blank',rel:'noopener noreferrer',onClick:function(e){e.stopPropagation();},
-            className:'flex items-center justify-center gap-2 bg-blue-500 text-white p-2.5 rounded-lg font-bold text-sm hover:bg-blue-600'},
-            h(Ico,{name:'book',size:16,className:'text-white'}),' Gameranx Review')
-        ),
-        g.id>=1000&&h('button',{
-          onClick:function(e){e.stopPropagation();if(confirm('Delete "'+g.name+'"?'))props.onDelete(g.id);},
-          className:'w-full flex items-center justify-center gap-2 bg-red-600 text-white p-2 rounded-lg text-sm font-bold hover:bg-red-700 mt-1'},
-          h(Ico,{name:'trash',size:14,className:'text-white'}),' Delete Game')
-      )
-    );
-  }
+            )
+          ),
+          // Progress
+          h('div',{className:'flex justify-between text-xs mb-1'},
+            h('span',{style:{color:'var(--muted)'}},'Completion Progress'),
+            h('span',{className:'font-bold',style:{color:'var(--text)'}},pct+'%')
+          ),
+          h('div',{className:'progress-bar'},h('div',{className:'progress-fill',style:{width:pct+'%'}})),
+          h('p',{className:'text-center text-xs mt-1',style:{color:'var(--muted)'}},(completed+fav)+' of '+total+' games completed'),
 
-  // ── ADD GAME FORM ────────────────────────────────────────────────
-  function AddForm(props){
-    var dark=props.darkMode;
-    var fs=useState({name:'',genre:'',fps:'',tier:'C',priority:'MEDIUM',trailer:'',desc:'',hours:'',icon:'🎮',image:''});
-    var f=fs[0]; var sf=fs[1];
-    var ss=useState(false); var searching=ss[0]; var setSearching=ss[1];
-    var rs=useState([]); var results=rs[0]; var setResults=rs[1];
-    var inp=dark?'bg-gray-700 text-white border-gray-600':'bg-white border-gray-300';
-    var tx=dark?'text-white':'text-gray-800';
-    var card=dark?'bg-gray-800':'bg-white';
-    function set(k,v){sf(function(p){var n=Object.assign({},p);n[k]=v;return n;});}
-
-    function doSearch(){
-      if(!f.name||f.name.length<2)return;
-      setSearching(true);setResults([]);
-      rawg('games?search='+encodeURIComponent(f.name)+'&page_size=6')
-        .then(function(d){
-          var list=(d.results||[]).map(function(g){
-            return {id:g.id,name:g.name,released:g.released,rating:g.rating,image:g.background_image,genres:(g.genres||[]).map(function(x){return x.name;}).join(', ')};
-          });
-          setResults(list.length?list:[{id:'none',name:'No results found.',noResult:true}]);
-          setSearching(false);
-        })
-        .catch(function(e){alert('Search failed: '+(e.message||'unknown'));setSearching(false);});
-    }
-
-    function selectGame(id){
-      setSearching(true);setResults([]);
-      rawg('games/'+id)
-        .then(function(g){
-          var yr=g.released?parseInt(g.released):2020;
-          var age=new Date().getFullYear()-yr;
-          var fps=age<=2?'20-30':age<=5?'30-45':age<=8?'40-55':'50-60';
-          var sc=g.metacritic||(g.rating||0)*20;
-          var tier=sc>=90?'S':sc>=80?'A':sc>=70?'B':'C';
-          var em={Action:'⚔️',Adventure:'🗺️',RPG:'🎭',Shooter:'🔫',Racing:'🏎️',Sports:'⚽',Horror:'👻',Indie:'🎨'};
-          var gn=(g.genres||[{name:''}])[0].name;
-          sf({name:g.name,genre:(g.genres||[]).map(function(x){return x.name;}).join(', ')||'Unknown',
-            fps:fps,tier:tier,priority:'MEDIUM',
-            trailer:'https://www.youtube.com/results?search_query='+encodeURIComponent(g.name)+'+official+trailer',
-            desc:g.description_raw?g.description_raw.substring(0,200)+'...':'',
-            hours:g.playtime?g.playtime+'-'+(g.playtime+5):'',
-            icon:em[gn]||'🎮',image:g.background_image||''});
-          setSearching(false);
-        })
-        .catch(function(e){alert('Details failed: '+(e.message||'unknown'));setSearching(false);});
-    }
-
-    function submit(e){
-      e.preventDefault();
-      if(!f.name.trim()){alert('Game name is required!');return;}
-      props.onAdd(Object.assign({},f,{id:Date.now(),status:'not_downloaded',rating:0,notes:''}));
-      props.onClose();
-    }
-
-    return h('div',{className:card+' rounded-xl shadow-xl p-4 mb-4'},
-      h('div',{className:'flex justify-between items-center mb-3'},
-        h('h3',{className:'font-bold text-lg '+tx},'Add New Game'),
-        h('button',{onClick:props.onClose,className:'text-gray-500 hover:text-gray-700 text-xl'},'✕')
-      ),
-      h('div',{className:'bg-purple-50 p-3 rounded-lg mb-3'},
-        h('p',{className:'text-sm font-medium mb-2 text-gray-800'},'🔍 Search RAWG Database'),
-        h('div',{className:'flex gap-2'},
-          h('input',{type:'text',placeholder:'Game name...',value:f.name,disabled:searching,
-            onChange:function(e){set('name',e.target.value);},
-            onKeyDown:function(e){if(e.key==='Enter'){e.preventDefault();doSearch();}},
-            className:'flex-1 p-2 border rounded text-sm '+(dark?'bg-gray-700 text-white border-gray-600':'border-gray-300')}),
-          h('button',{type:'button',onClick:doSearch,disabled:searching||!f.name,
-            className:'px-4 py-2 rounded font-bold text-sm text-white '+(searching||!f.name?'bg-gray-400 cursor-not-allowed':'bg-blue-500 hover:bg-blue-600')},
-            searching?'⏳':'🔍')
-        )
-      ),
-      results.length>0&&h('div',{className:'mb-3 rounded-lg border p-2 max-h-56 overflow-y-auto '+(dark?'bg-gray-700 border-gray-600':'bg-gray-50 border-gray-200')},
-        results.map(function(g){
-          if(g.noResult)return h('p',{key:'nr',className:'text-sm text-center py-2 '+tx},g.name);
-          return h('button',{key:g.id,type:'button',onClick:function(){selectGame(g.id);},
-            className:'w-full text-left p-2 rounded mb-1 flex items-center gap-2 '+(dark?'bg-gray-600 hover:bg-gray-500':'bg-white hover:bg-gray-100')},
-            g.image&&h('img',{src:g.image,alt:'',className:'w-10 h-10 object-cover rounded flex-shrink-0',onError:function(e){e.target.style.display='none';}}),
-            h('div',{className:'flex-1 min-w-0'},
-              h('p',{className:'text-sm font-medium '+tx+' truncate'},g.name),
-              h('p',{className:'text-xs opacity-60 truncate'},(g.released||'')+(g.genres?' • '+g.genres:''))
-            ),
-            g.rating&&h('span',{className:'text-yellow-500 text-xs flex-shrink-0'},'⭐'+parseFloat(g.rating).toFixed(1))
-          );
-        }),
-        h('button',{type:'button',onClick:function(){setResults([]);},className:'w-full text-xs text-gray-400 mt-1 hover:text-gray-600'},'✕ Clear results')
-      ),
-      h('form',{onSubmit:submit,className:'space-y-2'},
-        h('div',{className:'grid grid-cols-2 gap-2'},
-          h('input',{type:'text',placeholder:'Genre',value:f.genre,onChange:function(e){set('genre',e.target.value);},className:'w-full p-2 border rounded text-sm '+inp}),
-          h('input',{type:'text',placeholder:'FPS e.g. 30-60',value:f.fps,onChange:function(e){set('fps',e.target.value);},className:'w-full p-2 border rounded text-sm '+inp})
-        ),
-        h('div',{className:'grid grid-cols-2 gap-2'},
-          h('input',{type:'text',placeholder:'Hours',value:f.hours,onChange:function(e){set('hours',e.target.value);},className:'w-full p-2 border rounded text-sm '+inp}),
-          h('input',{type:'text',placeholder:'Icon emoji',value:f.icon,onChange:function(e){set('icon',e.target.value);},className:'w-full p-2 border rounded text-sm '+inp})
-        ),
-        h('select',{value:f.tier,onChange:function(e){set('tier',e.target.value);},className:'w-full p-2 border rounded text-sm '+inp},
-          Object.keys(CFG.TIERS).map(function(t){return h('option',{key:t,value:t},t+' — '+CFG.TIERS[t].label);})),
-        h('input',{type:'url',placeholder:'Trailer URL (YouTube)',value:f.trailer,onChange:function(e){set('trailer',e.target.value);},className:'w-full p-2 border rounded text-sm '+inp}),
-        h('textarea',{placeholder:'Description',value:f.desc,onChange:function(e){set('desc',e.target.value);},rows:2,className:'w-full p-2 border rounded text-sm '+inp}),
-        h('div',{className:'flex gap-2 pt-1'},
-          h('button',{type:'submit',className:'flex-1 bg-green-500 text-white p-2 rounded font-bold hover:bg-green-600'},'✓ Save Game'),
-          h('button',{type:'button',onClick:props.onClose,className:'flex-1 bg-gray-200 text-gray-700 p-2 rounded font-bold hover:bg-gray-300'},'Cancel')
-        )
-      )
-    );
-  }
-
-  // ── SIDEBAR ──────────────────────────────────────────────────────
-  var SIDEBAR_TABS=[
-    {key:'trending', label:'🔥 Trending',    endpoint:'games?ordering=-added&page_size=10'},
-    {key:'toprated', label:'⭐ Top Rated',   endpoint:'games?ordering=-rating&metacritic=70,100&page_size=10'},
-    {key:'new',      label:'🆕 New Releases',endpoint:'games?ordering=-released&page_size=10'},
-    {key:'upcoming', label:'📅 Upcoming',    endpoint:'games?ordering=-added&dates=2025-01-01,2026-12-31&page_size=10'}
-  ];
-
-  function Sidebar(props){
-    var dark=props.darkMode;
-    var ts=useState('trending'); var activeTab=ts[0]; var setActiveTab=ts[1];
-    var ld=useState([]); var items=ld[0]; var setItems=ld[1];
-    var ls=useState(false); var loading=ls[0]; var setLoading=ls[1];
-    var ke=useState(0); var refreshKey=ke[0]; var setRefreshKey=ke[1];
-
-    var card=dark?'bg-gray-800':'bg-white';
-    var tx=dark?'text-gray-100':'text-gray-800';
-    var ts2=dark?'text-gray-400':'text-gray-500';
-    var border=dark?'border-gray-700':'border-gray-100';
-
-    useEffect(function(){
-      setLoading(true);setItems([]);
-      var tab=SIDEBAR_TABS.find(function(t){return t.key===activeTab;});
-      if(!tab){setLoading(false);return;}
-      rawg(tab.endpoint)
-        .then(function(d){
-          setItems(d.results||[]);
-          setLoading(false);
-        })
-        .catch(function(){setLoading(false);});
-    },[activeTab, refreshKey]);
-
-    return h('div',{className:card+' rounded-xl shadow-md overflow-hidden sidebar-scroll'},
-      // Tab header + refresh
-      h('div',{className:'p-3 border-b '+border},
-        h('div',{className:'flex items-center justify-between mb-2'},
-          h('span',{className:'font-bold text-sm '+tx},'🌐 Gaming World'),
-          h('button',{
-            onClick:function(){setRefreshKey(function(k){return k+1;});},
-            title:'Refresh',
-            className:'p-1 rounded-lg text-gray-400 hover:text-purple-500 hover:bg-purple-50 transition-colors '+(loading?'animate-pulse':'')
-          },h(Ico,{name:'refresh',size:16}))
-        ),
-        h('div',{className:'flex gap-1 overflow-x-auto pb-1'},
-          SIDEBAR_TABS.map(function(tab){
-            return h('button',{key:tab.key,onClick:function(){setActiveTab(tab.key);},
-              className:'px-2 py-1 rounded-lg text-xs font-medium whitespace-nowrap transition-colors '
-                +(activeTab===tab.key?'bg-purple-600 text-white':(dark?'bg-gray-700 text-gray-300 hover:bg-gray-600':'bg-gray-100 text-gray-600 hover:bg-gray-200'))
-            },tab.label);
-          })
-        )
-      ),
-      // Content
-      h('div',{className:'divide-y '+(dark?'divide-gray-700':'divide-gray-50')},
-        loading
-          ?[1,2,3,4,5].map(function(i){
-              return h('div',{key:i,className:'p-3 flex gap-2 items-center'},
-                h('div',{className:'w-12 h-16 rounded bg-gray-200 animate-pulse flex-shrink-0'}),
-                h('div',{className:'flex-1 space-y-2'},
-                  h('div',{className:'h-3 bg-gray-200 rounded animate-pulse w-3/4'}),
-                  h('div',{className:'h-2 bg-gray-200 rounded animate-pulse w-1/2'}),
-                  h('div',{className:'h-2 bg-gray-200 rounded animate-pulse w-1/3'})
-                )
+          // Stats row
+          h('div',{className:'grid grid-cols-4 gap-2 mt-3'},
+            [['Total',total,'var(--accent)'],['Playing',playing,'#22c55e'],['Done',completed+fav,'#a855f7'],['Fav',fav,'#eab308']].map(function(s,i){
+              return h('div',{key:i,className:'text-center p-2 rounded-xl',style:{background:'var(--card-border)'}},
+                h('div',{className:'text-xl font-black',style:{color:s[2]}},s[1]),
+                h('div',{style:{fontSize:10,color:'var(--muted)'}},s[0])
               );
             })
-          :items.length===0
-            ?h('div',{className:'p-6 text-center '+ts2},'No data available')
-            :items.map(function(game){
-                return h('div',{key:game.id,className:'p-3 flex gap-2 items-start hover:bg-opacity-50 '+(dark?'hover:bg-gray-700':'hover:bg-gray-50')+' transition-colors'},
-                  game.background_image
-                    ?h('img',{src:game.background_image,alt:game.name,className:'w-12 h-16 object-cover rounded flex-shrink-0',onError:function(e){e.target.style.display='none';}})
-                    :h('div',{className:'w-12 h-16 bg-gray-200 rounded flex-shrink-0 flex items-center justify-center text-xl'},'🎮'),
-                  h('div',{className:'flex-1 min-w-0'},
-                    h('p',{className:'text-xs font-semibold '+tx+' leading-tight mb-0.5'},game.name),
-                    game.released&&h('p',{className:'text-xs '+ts2},game.released),
-                    (game.genres||[]).length>0&&h('p',{className:'text-xs '+ts2+' truncate'},(game.genres||[]).slice(0,2).map(function(g){return g.name;}).join(', ')),
-                    game.rating>0&&h('div',{className:'flex items-center gap-1 mt-0.5'},
-                      h('span',{className:'text-yellow-500 text-xs'},'⭐'),
-                      h('span',{className:'text-xs '+ts2},parseFloat(game.rating).toFixed(1)),
-                      game.metacritic&&h('span',{className:'text-xs bg-green-100 text-green-700 px-1 rounded ml-1'},game.metacritic)
-                    )
-                  )
-                );
-              })
-      )
-    );
-  }
-
-  // ── MAIN APP ─────────────────────────────────────────────────────
-  function App(){
-    var gs=useState(function(){return loadGames();}); var games=gs[0]; var setGames=gs[1];
-    var ds=useState(function(){return loadDark();}); var dark=ds[0]; var setDark=ds[1];
-    var es=useState(null); var expId=es[0]; var setExpId=es[1];
-    var fs=useState('all'); var filter=fs[0]; var setFilter=fs[1];
-    var qs=useState(''); var q=qs[0]; var setQ=qs[1];
-    var ss=useState('tier'); var sort=ss[0]; var setSort=ss[1];
-    var shs=useState(false); var showSort=shs[0]; var setShowSort=shs[1];
-    var as=useState(false); var showAdd=as[0]; var setShowAdd=as[1];
-    var ic=useState(function(){return loadImgCache();}); var imgCache=ic[0]; var setImgCache=ic[1];
-
-    useEffect(function(){saveGames(games);},[games]);
-    useEffect(function(){saveDark(dark);},[dark]);
-    useEffect(function(){saveImgCache(imgCache);},[imgCache]);
-    useEffect(function(){setTimeout(hideLoader,400);},[]);
-
-    // Auto-fetch cover art for games that don't have it cached
-    useEffect(function(){
-      var missing=games.filter(function(g){return !imgCache[g.id]&&!g.image;});
-      if(missing.length===0)return;
-      var i=0;
-      function fetchNext(){
-        if(i>=missing.length)return;
-        var g=missing[i++];
-        rawg('games?search='+encodeURIComponent(g.name)+'&page_size=1&exact=true')
-          .then(function(d){
-            var r=(d.results||[])[0];
-            if(r&&r.background_image){
-              setImgCache(function(prev){
-                var next=Object.assign({},prev);
-                next[g.id]=r.background_image;
-                return next;
-              });
-            }
-          })
-          .catch(function(){})
-          .then(function(){setTimeout(fetchNext,350);}); // 350ms between requests
-      }
-      fetchNext();
-    },[]);
-
-    var shown=games.filter(function(g){
-      if(filter!=='all'&&g.status!==filter)return false;
-      if(q){var t=q.toLowerCase();return g.name.toLowerCase().includes(t)||g.genre.toLowerCase().includes(t)||(g.desc||'').toLowerCase().includes(t);}
-      return true;
-    }).sort(function(a,b){
-      if(sort==='name')return a.name.localeCompare(b.name);
-      if(sort==='fps')return parseInt((b.fps||'0').split('-').pop()||0)-parseInt((a.fps||'0').split('-').pop()||0);
-      if(sort==='rating')return(b.rating||0)-(a.rating||0);
-      var o=CFG.TIER_ORDER;
-      if(o[a.tier]!==o[b.tier])return o[a.tier]-o[b.tier];
-      return a.name.localeCompare(b.name);
-    });
-
-    var total=games.length;
-    var playing=games.filter(function(g){return g.status==='playing';}).length;
-    var completed=games.filter(function(g){return g.status==='completed';}).length;
-    var fav=games.filter(function(g){return g.status==='favorite';}).length;
-    var notdl=games.filter(function(g){return g.status==='not_downloaded';}).length;
-    var dld=games.filter(function(g){return g.status==='downloaded';}).length;
-    var pct=total>0?Math.round(((completed+fav)/total)*100):0;
-
-    var card=dark?'bg-gray-800':'bg-white';
-    var tx=dark?'text-gray-100':'text-gray-800';
-    var ts=dark?'text-gray-400':'text-gray-500';
-    var bg=dark?'bg-gradient-to-br from-gray-900 via-indigo-900 to-purple-900':'bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900';
-    var inp=dark?'bg-gray-700 text-white border-gray-600':'bg-white border-gray-300';
-
-    function upStatus(id,ns){setGames(function(gs){return gs.map(function(g){return g.id===id?Object.assign({},g,{status:ns}):g;});});}
-    function upRating(id,r){setGames(function(gs){return gs.map(function(g){return g.id===id?Object.assign({},g,{rating:r}):g;});});}
-    function upNotes(id,n){setGames(function(gs){return gs.map(function(g){return g.id===id?Object.assign({},g,{notes:n}):g;});});}
-    function delGame(id){setGames(function(gs){return gs.filter(function(g){return g.id!==id;});});setExpId(null);}
-    function addGame(gd){setGames(function(gs){return gs.concat([gd]);});}
-
-    var filters=[['all','All',total],['not_downloaded','Not DL',notdl],['downloaded','DL\'d',dld],['playing','Playing',playing],['completed','Done',completed],['favorite','Fav',fav]];
-
-    return h('div',{className:'min-h-screen '+bg+' p-3'},
-      // Two-column layout on large screens
-      h('div',{className:'max-w-7xl mx-auto lg:flex lg:gap-4 lg:items-start'},
-
-        // ── LEFT: MAIN COLUMN ──────────────────────────────────────
-        h('div',{className:'flex-1 min-w-0'},
-
-          // HEADER
-          h('div',{className:card+' rounded-xl shadow-2xl p-4 mb-4'},
-            h('div',{className:'flex justify-between items-center mb-1'},
-              h('h1',{className:'text-xl font-bold '+tx},CFG.APP_NAME),
-              h('button',{onClick:function(){setDark(!dark);},className:'p-2 rounded-lg '+(dark?'bg-gray-700 hover:bg-gray-600':'bg-gray-100 hover:bg-gray-200')},
-                h(Ico,{name:dark?'sun':'moon',size:18}))
-            ),
-            h('p',{className:'text-xs '+ts+' mb-3'},'Tap card to expand details • Click a status button to update'),
-            h('div',{className:'flex justify-between text-xs mb-1'},h('span',{className:ts},'Progress'),h('span',{className:tx},pct+'%')),
-            h('div',{className:'w-full bg-gray-200 rounded-full h-2'},
-              h('div',{className:'bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all',style:{width:pct+'%'}})),
-            h('p',{className:'text-xs mt-1 text-center '+ts},(completed+fav)+' of '+total+' completed')
-          ),
-
-          // SEARCH + SORT
-          h('div',{className:card+' rounded-xl shadow-md p-3 mb-4'},
-            h('div',{className:'flex gap-2'},
-              h('div',{className:'flex-1 relative'},
-                h('span',{className:'absolute left-3 top-1/2 -translate-y-1/2 text-gray-400'},h(Ico,{name:'search',size:16})),
-                h('input',{type:'text',placeholder:'Search games...',value:q,
-                  onChange:function(e){setQ(e.target.value);},
-                  className:'w-full pl-9 pr-3 py-2 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 '+inp})
-              ),
-              h('button',{onClick:function(){setShowSort(!showSort);},
-                className:'px-3 py-2 rounded-lg '+(showSort?'bg-purple-600 text-white':'bg-purple-100 text-purple-600 hover:bg-purple-200')},
-                h(Ico,{name:'sliders',size:16}))
-            ),
-            showSort&&h('div',{className:'flex gap-2 flex-wrap mt-2'},
-              [['tier','Tier'],['name','Name'],['fps','FPS'],['rating','Rating']].map(function(o){
-                return h('button',{key:o[0],onClick:function(){setSort(o[0]);},
-                  className:'px-3 py-1 rounded text-xs font-medium '+(sort===o[0]?'bg-purple-600 text-white':(dark?'bg-gray-700 text-gray-300':'bg-gray-100 text-gray-600'))
-                },'Sort by '+o[1]);
-              })
-            )
-          ),
-
-          // STATS
-          h('div',{className:'grid grid-cols-3 gap-2 mb-4'},
-            h('div',{className:card+' rounded-lg p-3 text-center shadow'},
-              h('div',{className:'text-2xl font-bold '+tx},total),h('div',{className:'text-xs '+ts},'Total')),
-            h('div',{className:(dark?'bg-green-900':'bg-green-50')+' rounded-lg p-3 text-center shadow'},
-              h('div',{className:'text-2xl font-bold '+(dark?'text-green-300':'text-green-600')},playing),h('div',{className:'text-xs '+(dark?'text-green-400':'text-green-500')},'Playing')),
-            h('div',{className:(dark?'bg-purple-900':'bg-purple-50')+' rounded-lg p-3 text-center shadow'},
-              h('div',{className:'text-2xl font-bold '+(dark?'text-purple-300':'text-purple-600')},completed+fav),h('div',{className:'text-xs '+(dark?'text-purple-400':'text-purple-500')},'Completed'))
-          ),
-
-          // FILTERS
-          h('div',{className:card+' rounded-xl shadow-md p-3 mb-4'},
-            h('div',{className:'flex gap-1.5 overflow-x-auto pb-1'},
-              filters.map(function(fb){
-                return h('button',{key:fb[0],onClick:function(){setFilter(fb[0]);},
-                  className:'px-3 py-1.5 rounded-lg whitespace-nowrap text-xs font-semibold transition-colors '
-                    +(filter===fb[0]?'bg-purple-600 text-white shadow-sm':(dark?'bg-gray-700 text-gray-300 hover:bg-gray-600':'bg-gray-100 text-gray-600 hover:bg-gray-200'))
-                },fb[1]+' ('+fb[2]+')');
-              })
-            )
-          ),
-
-          // EXPORT/IMPORT
-          h('div',{className:card+' rounded-xl shadow-md p-3 mb-4 flex gap-2'},
-            h('button',{onClick:function(){
-              var blob=new Blob([JSON.stringify(games,null,2)],{type:'application/json'});
-              var url=URL.createObjectURL(blob);
-              var a=document.createElement('a');a.href=url;a.download='gaming-backup-'+Date.now()+'.json';a.click();
-              setTimeout(function(){URL.revokeObjectURL(url);},100);
-            },className:'flex-1 flex items-center justify-center gap-1.5 bg-green-500 text-white p-2 rounded-lg text-xs font-semibold hover:bg-green-600'},
-              h(Ico,{name:'download',size:14,className:'text-white'}),'Export'),
-            h('label',{className:'flex-1 flex items-center justify-center gap-1.5 bg-blue-500 text-white p-2 rounded-lg text-xs font-semibold cursor-pointer hover:bg-blue-600'},
-              h(Ico,{name:'upload',size:14,className:'text-white'}),'Import',
-              h('input',{type:'file',accept:'.json',className:'hidden',onChange:function(e){
-                var file=e.target.files[0];if(!file)return;
-                var r=new FileReader();
-                r.onload=function(ev){try{var d=JSON.parse(ev.target.result);if(confirm('Import '+d.length+' games?'))setGames(d);}catch(err){alert('Invalid file.');}};
-                r.readAsText(file);e.target.value='';
-              }})
-            )
-          ),
-
-          // ADD GAME
-          showAdd
-            ?h(AddForm,{darkMode:dark,onAdd:addGame,onClose:function(){setShowAdd(false);}})
-            :h('button',{onClick:function(){setShowAdd(true);},
-                className:'w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl p-3.5 font-bold shadow-lg flex items-center justify-center gap-2 hover:from-purple-700 hover:to-pink-700 mb-4 text-sm'},
-                h(Ico,{name:'plus',size:18,className:'text-white'}),' Add New Game'),
-
-          // GAME LIST
-          shown.length>0
-            ?h('div',{className:'space-y-2'},
-                shown.map(function(g){
-                  return h(GameCard,{key:g.id,game:g,darkMode:dark,
-                    cover:imgCache[g.id]||null,
-                    expanded:expId===g.id,
-                    setExpanded:function(v){setExpId(v?g.id:null);},
-                    onStatus:upStatus,onRating:upRating,onNotes:upNotes,onDelete:delGame});
-                })
-              )
-            :h('div',{className:card+' rounded-xl shadow-md p-8 text-center'},
-                h('div',{className:'text-5xl mb-3'},'🎮'),
-                h('p',{className:'font-semibold '+ts},q?'No games match "'+q+'"':filter!=='all'?'No games in this category':'Add your first game!'),
-                h('p',{className:'text-xs '+ts+' mt-1'},'Try adjusting your search or filter')
-              ),
-
-          h('div',{className:'text-center text-xs '+ts+' mt-6 mb-4 opacity-60'},
-            'Made with ❤️ for '+CFG.APP_AUTHOR+"'s Gaming Journey • v"+CFG.APP_VERSION)
+          )
         ),
 
-        // ── RIGHT: SIDEBAR ─────────────────────────────────────────
-        h('div',{className:'hidden lg:block w-72 flex-shrink-0 mt-0'},
-          h(Sidebar,{darkMode:dark})
-        )
+        // SEARCH + VIEW TOGGLE + SORT
+        h('div',{className:'card-base p-3'},
+          h('div',{className:'flex gap-2 mb-0'},
+            h('div',{className:'flex-1 relative'},
+              h('span',{className:'absolute left-3 top-1/2 -translate-y-1/2',style:{color:'var(--muted)'}},h(Ico,{n:'search',size:15})),
+              h('input',{type:'text',placeholder:'Search games...',value:q,
+                onChange:function(e){setQ(e.target.value);},
+                className:'input-base',style:{paddingLeft:36}})
+            ),
+            // View mode buttons
+            h('div',{className:'flex rounded-xl overflow-hidden',style:{border:'1px solid var(--card-border)'}},
+              views.map(function(v){
+                return h('button',{key:v[0],onClick:function(){setView(v[0]);},title:v[2],
+                  className:'px-2.5 py-2 transition-colors',
+                  style:{background:view===v[0]?'var(--accent)':'var(--card)',color:view===v[0]?'var(--accent-text)':'var(--muted)'}},
+                  h(Ico,{n:v[1],size:14}));
+              })
+            ),
+            h('button',{onClick:function(){setShowSort(!showSort);},
+              className:'px-2.5 py-2 rounded-xl',style:{background:showSort?'var(--accent)':'var(--btn-neutral)',color:showSort?'var(--accent-text)':'var(--muted)'}},
+              h(Ico,{n:'sliders',size:14}))
+          ),
+          showSort&&h('div',{className:'flex gap-2 flex-wrap mt-2 fade-in'},
+            [['tier','Tier'],['name','Name'],['fps','FPS'],['rating','Rating']].map(function(o){
+              return h('button',{key:o[0],onClick:function(){setSort(o[0]);},
+                className:'px-3 py-1 rounded-lg text-xs font-semibold transition-colors',
+                style:{background:sort===o[0]?'var(--accent)':'var(--btn-neutral)',color:sort===o[0]?'var(--accent-text)':'var(--btn-neutral-t)'}},'Sort by '+o[1]);
+            })
+          )
+        ),
+
+        // FILTERS
+        h('div',{className:'card-base p-2.5'},
+          h('div',{className:'flex gap-1.5 overflow-x-auto pb-0.5'},
+            filters.map(function(fb){
+              return h('button',{key:fb[0],onClick:function(){setFilter(fb[0]);},
+                className:'px-3 py-1.5 rounded-lg whitespace-nowrap text-xs font-semibold transition-colors',
+                style:{background:filter===fb[0]?'var(--accent)':'var(--btn-neutral)',color:filter===fb[0]?'var(--accent-text)':'var(--btn-neutral-t)'}},
+                fb[1]+' ('+fb[2]+')');
+            })
+          )
+        ),
+
+        // EXPORT / IMPORT
+        h('div',{className:'card-base p-2.5 flex gap-2'},
+          h('button',{onClick:function(){
+            var blob=new Blob([JSON.stringify(games,null,2)],{type:'application/json'});
+            var url=URL.createObjectURL(blob);
+            var a=document.createElement('a');a.href=url;a.download='gaming-backup-'+Date.now()+'.json';a.click();
+            setTimeout(function(){URL.revokeObjectURL(url);},100);
+          },className:'btn-accent flex-1 justify-center',style:{background:'#16a34a',fontSize:12,padding:'8px 0'}},
+            h(Ico,{n:'download',size:13,cls:'text-white'}),' Export'),
+          h('label',{className:'btn-accent flex-1 justify-center',style:{background:'#2563eb',fontSize:12,padding:'8px 0',cursor:'pointer'}},
+            h(Ico,{n:'upload',size:13,cls:'text-white'}),' Import',
+            h('input',{type:'file',accept:'.json',className:'hidden',onChange:function(e){
+              var file=e.target.files[0];if(!file)return;
+              var reader=new FileReader();
+              reader.onload=function(ev){try{var d=JSON.parse(ev.target.result);if(confirm('Import '+d.length+' games? This replaces your list.'))setGames(d);}catch(err){alert('Invalid file.');}};
+              reader.readAsText(file);e.target.value='';
+            }})
+          )
+        ),
+
+        // ADD GAME
+        showAdd
+          ?h(AddForm,{onAdd:addGame,onClose:function(){setShowAdd(false);}})
+          :h('button',{onClick:function(){setShowAdd(true);},
+              className:'btn-accent w-full justify-center',style:{background:'linear-gradient(135deg,var(--accent),var(--accent2))',padding:'12px 0',fontSize:14,borderRadius:14,boxShadow:'0 4px 20px rgba(0,0,0,.25)'}},
+              h(Ico,{n:'plus',size:17,cls:'text-white'}),' Add New Game'),
+
+        // GAME LIST/GRID/TILES
+        h('div',{className:'game-list'},
+          shown.length>0
+            ?shown.map(function(g){
+                var cp=cardProps(g);
+                if(view==='grid')return h(GridCard,cp);
+                if(view==='tiles')return h(TileCard,cp);
+                return h(GameCard,cp);
+              })
+            :[h('div',{key:'empty',className:'card-base p-10 text-center'},
+                h('div',{className:'text-5xl mb-3'},'🎮'),
+                h('p',{className:'font-semibold text-sm',style:{color:'var(--subtext)'}},q?'No games match "'+q+'"':filter!=='all'?'No games here':'Add your first game!')
+              )]
+        ),
+
+        // FOOTER
+        h('p',{className:'text-center text-xs pb-4',style:{color:'var(--muted)'}},
+          'Made with ❤️ for '+CFG.APP_AUTHOR+"'s Gaming Journey • v"+CFG.APP_VERSION)
       ),
 
-      // Sidebar on mobile — below main content
-      h('div',{className:'lg:hidden mt-4'},
-        h(Sidebar,{darkMode:dark})
-      )
-    );
-  }
+      // ── SIDEBAR COLUMN ───────────────────────────────────────────
+      h('div',{className:'hidden lg:block w-72 flex-shrink-0 sidebar-sticky'},h(Sidebar,null)),
+      h('div',{className:'lg:hidden mt-4'},h(Sidebar,null))
+    )
+  );
+}
 
-  ReactDOM.render(h(App,null), document.getElementById('root'));
+ReactDOM.render(h(App,null),document.getElementById('root'));
 
-  // PWA
-  (function(){
-    var d=null;
-    if('serviceWorker'in navigator)window.addEventListener('load',function(){navigator.serviceWorker.register('service-worker.js').catch(function(){});});
-    window.addEventListener('beforeinstallprompt',function(e){
-      e.preventDefault();d=e;
-      var dis=localStorage.getItem('installDis');
-      if(!dis||(Date.now()-parseInt(dis))/86400000>7)setTimeout(function(){var el=document.getElementById('installPrompt');if(el)el.classList.add('show');},4000);
-    });
-    document.addEventListener('click',function(e){
-      if(e.target.id==='installBtn'&&d){d.prompt();d=null;var el=document.getElementById('installPrompt');if(el)el.classList.remove('show');}
-      if(e.target.id==='dismissBtn'){var el=document.getElementById('installPrompt');if(el)el.classList.remove('show');localStorage.setItem('installDis',Date.now()+'');}
-    });
-  })();
-  </script>
+// PWA
+(function(){
+  var d=null;
+  if('serviceWorker'in navigator)window.addEventListener('load',function(){navigator.serviceWorker.register('service-worker.js').catch(function(){});});
+  window.addEventListener('beforeinstallprompt',function(e){
+    e.preventDefault();d=e;
+    var dis=localStorage.getItem('installDis');
+    if(!dis||(Date.now()-parseInt(dis))/86400000>7)setTimeout(function(){var el=document.getElementById('installPrompt');if(el)el.classList.add('show');},5000);
+  });
+  document.addEventListener('click',function(e){
+    if(e.target.id==='installBtn'&&d){d.prompt();d=null;var el=document.getElementById('installPrompt');if(el)el.classList.remove('show');}
+    if(e.target.id==='dismissBtn'){var el=document.getElementById('installPrompt');if(el)el.classList.remove('show');localStorage.setItem('installDis',Date.now()+'');}
+  });
+})();
+</script>
 </body>
 </html>
