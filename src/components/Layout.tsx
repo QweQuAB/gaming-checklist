@@ -1,13 +1,14 @@
 import React from 'react';
-import { Gamepad2, Library, Flame, Youtube, Settings } from 'lucide-react';
+import { Gamepad2, Library, Flame, Youtube, Settings, Newspaper } from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
 import { cn } from '@/lib/utils';
 
 const NAV_ITEMS = [
-  { id: 'library',   label: 'Library',   icon: Library  },
-  { id: 'releases',  label: 'Releases',  icon: Flame    },
-  { id: 'youtubers', label: 'YouTubers', icon: Youtube  },
-  { id: 'settings',  label: 'Settings',  icon: Settings },
+  { id: 'library',   label: 'Library',   icon: Library   },
+  { id: 'releases',  label: 'Releases',  icon: Flame     },
+  { id: 'intel',     label: 'Intel',     icon: Newspaper },
+  { id: 'youtubers', label: 'YouTubers', icon: Youtube   },
+  { id: 'settings',  label: 'Settings',  icon: Settings  },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -25,13 +26,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
           >
             <Gamepad2 className="w-5 h-5" />
           </div>
-          <h1 className="font-heading text-base lg:text-lg font-bold tracking-wide truncate">
-            Q's Checklist
-          </h1>
+          <h1 className="font-heading text-base lg:text-lg font-bold tracking-wide truncate">Q's Checklist</h1>
         </div>
 
         <nav className="flex-1 px-3 lg:px-4 space-y-1 mt-4 lg:mt-6 overflow-y-auto">
-          {NAV_ITEMS.slice(0, 3).map(item => {
+          {NAV_ITEMS.slice(0, 4).map(item => {
             const active = activeSection === item.id;
             return (
               <button
@@ -67,7 +66,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
       {/* ── Main content ── */}
       <main className="flex-1 flex flex-col relative overflow-hidden" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
-        {/* mobile top bar */}
+        {/* Mobile top bar */}
         <div className="md:hidden flex items-center gap-3 px-4 py-3 border-b border-[var(--panel-border)] glass-panel flex-shrink-0">
           <div
             className="w-7 h-7 flex items-center justify-center rounded flex-shrink-0"
@@ -84,7 +83,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </div>
       </main>
 
-      {/* ── Mobile bottom navigation (< md) ── */}
+      {/* ── Mobile bottom navigation ── */}
       <nav
         className="md:hidden fixed bottom-0 left-0 right-0 z-30 glass-panel border-t border-[var(--panel-border)] flex items-stretch"
         style={{ paddingBottom: 'env(safe-area-inset-bottom)', backgroundColor: 'var(--bg-color)' }}
@@ -98,8 +97,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
               className="flex-1 flex flex-col items-center justify-center py-2 gap-0.5 transition-all"
               style={{ color: active ? 'var(--accent-color)' : 'var(--text-muted)' }}
             >
-              <item.icon className="w-5 h-5" style={{ filter: active ? 'drop-shadow(0 0 4px var(--accent-color))' : 'none' }} />
-              <span className="text-[9px] font-bold tracking-wide uppercase">{item.label}</span>
+              <item.icon
+                className="w-4 h-4 sm:w-5 sm:h-5"
+                style={{ filter: active ? 'drop-shadow(0 0 4px var(--accent-color))' : 'none' }}
+              />
+              <span className="text-[8px] sm:text-[9px] font-bold tracking-wide uppercase">{item.label}</span>
             </button>
           );
         })}

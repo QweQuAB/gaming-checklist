@@ -1,9 +1,9 @@
 import React, { createContext, useContext, useCallback } from 'react';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import {
-  Game, YouTuber, NewRelease, AppSettings,
-  DEFAULT_SETTINGS, SAMPLE_GAMES, SAMPLE_YOUTUBERS, SAMPLE_NEW_RELEASES,
-  GameStatus, GameTier, AppTheme
+  Game, YouTuber, NewRelease, Article, AppSettings,
+  DEFAULT_SETTINGS, SAMPLE_GAMES, SAMPLE_YOUTUBERS, SAMPLE_NEW_RELEASES, SAMPLE_ARTICLES,
+  GameStatus, GameTier, AppTheme,
 } from '@/types';
 import { generateId } from '@/lib/utils';
 
@@ -11,6 +11,7 @@ interface AppContextValue {
   games: Game[];
   youtubers: YouTuber[];
   newReleases: NewRelease[];
+  articles: Article[];
   settings: AppSettings;
   addGame: (game: Omit<Game, 'id' | 'addedAt' | 'updatedAt'>) => void;
   updateGame: (id: string, updates: Partial<Game>) => void;
@@ -21,6 +22,9 @@ interface AppContextValue {
   updateYouTuber: (id: string, updates: Partial<YouTuber>) => void;
   deleteYouTuber: (id: string) => void;
   toggleWishlist: (id: string) => void;
+  addArticle: (article: Omit<Article, 'id' | 'bookmarked' | 'featured'>) => void;
+  deleteArticle: (id: string) => void;
+  toggleBookmark: (id: string) => void;
   updateSettings: (updates: Partial<AppSettings>) => void;
   setTheme: (theme: AppTheme) => void;
   importGames: (games: Game[]) => void;
@@ -37,13 +41,14 @@ const AppContext = createContext<AppContextValue | null>(null);
 const STATUS_CYCLE: GameStatus[] = ['Not Downloaded', 'Downloaded', 'Playing', 'Completed', 'Favorite'];
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
-  const [games, setGames] = useLocalStorage<Game[]>('gc_games', SAMPLE_GAMES);
-  const [youtubers, setYoutubers] = useLocalStorage<YouTuber[]>('gc_youtubers', SAMPLE_YOUTUBERS);
-  const [newReleases, setNewReleases] = useLocalStorage<NewRelease[]>('gc_newreleases', SAMPLE_NEW_RELEASES);
-  const [settings, setSettings] = useLocalStorage<AppSettings>('gc_settings', DEFAULT_SETTINGS);
-  const [searchQuery, setSearchQuery] = useLocalStorage<string>('gc_search', '');
-  const [activeSection, setActiveSection] = useLocalStorage<string>('gc_section', 'library');
-  const [selectedGameId, setSelectedGameId] = React.useState<string | null>(null);
+  const [games,      setGames]      = useLocalStorage<Game[]>('gc_games',       SAMPLE_GAMES);
+  const [youtubers,  setYoutubers]  = useLocalStorage<YouTuber[]>('gc_youtubers', SAMPLE_YOUTUBERS);
+  const [newReleases,setNewReleases]= useLocalStorage<NewRelease[]>('gc_newreleases', SAMPLE_NEW_RELEASES);
+  const [articles,   setArticles]   = useLocalStorage<Article[]>('gc_articles',  SAMPLE_ARTICLES);
+  const [settings,   setSettings]   = useLocalStorage<AppSettings>('gc_settings', DEFAULT_SETTINGS);
+  const [searchQuery,setSearchQuery]= useLocalStorage<string>('gc_search', '');
+  const [activeSection,setActiveSection] = useLocalStorage<string>('gc_section', 'library');
+  const [selectedGameId,setSelectedGameId] = React.useState<string | null>(null);
 
   const addGame = useCallback((game: Omit<Game, 'id' | 'addedAt' | 'updatedAt'>) => {
     const now = new Date().toISOString();
@@ -62,8 +67,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setGames(prev => prev.map(g => {
       if (g.id !== id) return g;
       const idx = STATUS_CYCLE.indexOf(g.status);
-      const next = STATUS_CYCLE[(idx + 1) % STATUS_CYCLE.length];
-      return { ...g, status: next, updatedAt: new Date().toISOString() };
+      return { ...g, status: STATUS_CYCLE[(idx + 1) % STATUS_CYCLE.length], updatedAt: new Date().toISOString() };
     }));
   }, [setGames]);
 
@@ -87,6 +91,23 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setNewReleases(prev => prev.map(r => r.id === id ? { ...r, wishlist: !r.wishlist } : r));
   }, [setNewReleases]);
 
+  const addArticle = useCallback((article: Omit<Article, 'id' | 'bookmarked' | 'featured'>) => {
+    setArticles(prev => [{
+      ...article,
+      id: generateId(),
+      bookmarked: false,
+      featured: false,
+    }, ...prev]);
+  }, [setArticles]);
+
+  const deleteArticle = useCallback((id: string) => {
+    setArticles(prev => prev.filter(a => a.id !== id));
+  }, [setArticles]);
+
+  const toggleBookmark = useCallback((id: string) => {
+    setArticles(prev => prev.map(a => a.id === id ? { ...a, bookmarked: !a.bookmarked } : a));
+  }, [setArticles]);
+
   const updateSettings = useCallback((updates: Partial<AppSettings>) => {
     setSettings(prev => ({ ...prev, ...updates }));
   }, [setSettings]);
@@ -98,18 +119,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const importGames = useCallback((imported: Game[]) => {
     setGames(prev => {
       const existingIds = new Set(prev.map(g => g.id));
-      const newGames = imported.filter(g => !existingIds.has(g.id));
-      return [...prev, ...newGames];
+      return [...prev, ...imported.filter(g => !existingIds.has(g.id))];
     });
   }, [setGames]);
 
   return (
     <AppContext.Provider value={{
-      games, youtubers, newReleases, settings,
+      games, youtubers, newReleases, articles, settings,
       addGame, updateGame, deleteGame, cycleStatus, setRating,
       addYouTuber, updateYouTuber, deleteYouTuber,
-      toggleWishlist, updateSettings, setTheme,
-      importGames, searchQuery, setSearchQuery,
+      toggleWishlist, addArticle, deleteArticle, toggleBookmark,
+      updateSettings, setTheme, importGames,
+      searchQuery, setSearchQuery,
       activeSection, setActiveSection,
       selectedGameId, setSelectedGameId,
     }}>

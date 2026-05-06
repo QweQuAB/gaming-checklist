@@ -5,6 +5,7 @@ import { LibraryPage } from '@/components/LibraryPage';
 import { NewReleasesPage } from '@/components/NewReleasesPage';
 import { YouTubersPage } from '@/components/YouTubersPage';
 import { SettingsPage } from '@/components/SettingsPage';
+import { GamingIntelPage } from '@/components/GamingIntelPage';
 
 function AppContent() {
   const { settings, activeSection } = useApp();
@@ -15,10 +16,11 @@ function AppContent() {
       style={{ backgroundColor: 'var(--bg-color)', color: 'var(--text-color)', fontFamily: 'var(--font-body)' }}
     >
       <Layout>
-        {activeSection === 'library' && <LibraryPage />}
-        {activeSection === 'releases' && <NewReleasesPage />}
+        {activeSection === 'library'   && <LibraryPage />}
+        {activeSection === 'releases'  && <NewReleasesPage />}
+        {activeSection === 'intel'     && <GamingIntelPage />}
         {activeSection === 'youtubers' && <YouTubersPage />}
-        {activeSection === 'settings' && <SettingsPage />}
+        {activeSection === 'settings'  && <SettingsPage />}
       </Layout>
     </div>
   );

@@ -1,6 +1,6 @@
 # Q's Gaming Checklist
 
-A desktop-grade React+Vite PWA to track your gaming backlog across tiers, statuses, and themes.
+A desktop-grade React+Vite PWA to track your gaming backlog across tiers, statuses, themes, and gaming news.
 
 ## Run & Operate
 
@@ -18,20 +18,21 @@ A desktop-grade React+Vite PWA to track your gaming backlog across tiers, status
 
 ## Where things live
 
-- `src/App.tsx` — root with AppProvider + theme wrapper
+- `src/App.tsx` — root with AppProvider + theme wrapper + section routing
 - `src/contexts/AppContext.tsx` — all state, CRUD, theme, import/export
-- `src/types/index.ts` — all types + sample data
-- `src/components/` — Layout, LibraryPage, GameCard, GameDetailPanel, AddGameModal, YouTubersPage, NewReleasesPage, SettingsPage
+- `src/types/index.ts` — all types + sample data (games, youtubers, releases, articles)
+- `src/components/` — Layout, LibraryPage, GameCard, GameDetailPanel, AddGameModal, YouTubersPage, NewReleasesPage, GamingIntelPage, SettingsPage
 - `src/index.css` — theme CSS vars (.theme-sleek / .theme-neon / .theme-retro)
 - `src/lib/utils.ts` — cn(), generateId(), YouTube/HLTB/Steam URL helpers
-- `vite.config.ts` — Vite + PWA config
+- `vite.config.ts` — Vite + PWA config (allowedHosts: true)
 
 ## Architecture decisions
 
 - Three dramatically different themes (sleek/neon/retro) driven by CSS custom properties on a `.theme-*` root class
 - All state in React context + useLocalStorage; no backend needed
-- GameDetailPanel is a slide-in drawer (fixed, right side) triggered by selectedGameId in context
-- Sample data seeded on first load if localStorage is empty
+- GameDetailPanel slides from right on desktop, bottom sheet on mobile
+- AddGameModal uses RAWG API (key from settings) for game search/autocomplete
+- Sample data seeded on first load if localStorage is empty; articles have their own `gc_articles` key
 - PWA manifest + vite-plugin-pwa for desktop/mobile install
 
 ## Product
@@ -39,12 +40,13 @@ A desktop-grade React+Vite PWA to track your gaming backlog across tiers, status
 - Tier-based game library (S/A/B/C/Racing), grouped by tier
 - Status cycling: Not Downloaded → Downloaded → Playing → Completed → Favorite
 - 1–5 star ratings, personal notes, playtime hours per game
-- Game detail slide-in panel: edit notes, rate, cycle status, quick links (YouTube, Gameranx, HLTB, Steam)
-- Search & filter by name and status
+- Game detail slide-in panel: notes, rating, status, playtime, quick links
+- RAWG API game search/autocomplete in Add Game modal
+- Gaming Intel section: articles on games, companies, hardware — bookmarkable, filterable, add custom
 - YouTubers section: add/delete creators with channel links
 - New Releases section with wishlist toggle
-- Settings page: theme switcher (Sleek Studio / Neon Command / Retro Arcade), RAWG API key, export/import JSON, reset
-- PWA — installable on desktop and mobile
+- Settings: theme switcher, RAWG API key, export/import JSON, reset
+- Fully responsive: mobile bottom nav, tablet/desktop sidebar, mobile-first layouts
 
 ## User preferences
 
@@ -53,12 +55,13 @@ A desktop-grade React+Vite PWA to track your gaming backlog across tiers, status
 
 ## Gotchas
 
-- `animate-in slide-in-from-right` requires Tailwind animate plugin or inline transition — use CSS transform fallback if not working
-- Theme CSS vars defined in `src/index.css` on `.theme-sleek`, `.theme-neon`, `.theme-retro` classes
+- Theme CSS vars defined in `src/index.css` on `.theme-sleek`, `.theme-neon`, `.theme-retro`
 - Vite HMR works; hard-refresh only needed after service worker updates
+- `allowedHosts: true` in vite.config.ts required for Replit proxy
 
 ## Pointers
 
 - [Vite docs](https://vitejs.dev)
 - [vite-plugin-pwa](https://vite-pwa-org.netlify.app)
 - [Tailwind CSS v4](https://tailwindcss.com/docs/v4-beta)
+- [RAWG API](https://rawg.io/apidocs)
