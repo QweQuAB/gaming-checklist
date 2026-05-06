@@ -1,59 +1,64 @@
 # Q's Gaming Checklist
 
-A PWA to track your gaming backlog and progress across multiple tiers and statuses.
+A desktop-grade React+Vite PWA to track your gaming backlog across tiers, statuses, and themes.
 
 ## Run & Operate
 
-- **Run**: `serve -s . -l 5000` (static file server)
-- No build step required — pure static HTML/CSS/JS
+- **Dev**: `npm run dev` → runs Vite at port 5000
+- **Build**: `npm run build` → outputs to `dist/`
+- **No backend** — all data in localStorage
 
 ## Stack
 
-- HTML/CSS/JS (no framework build step)
-- React 18 via CDN, Tailwind CSS via CDN, Babel Standalone (JSX in browser)
-- RAWG API for game search (online feature)
-- localStorage for data persistence
-- PWA with service worker for offline support
+- React 18 + TypeScript + Vite 6
+- Tailwind CSS v4 (via @tailwindcss/vite)
+- lucide-react for icons
+- vite-plugin-pwa for PWA/installability
+- localStorage persistence, no backend
 
 ## Where things live
 
-- `index.html` — main entry point
-- `css/styles.css` — all styles
-- `js/config.js` — app settings/constants
-- `js/data.js` — game data
-- `js/app.js` — main React app
-- `manifest.json` — PWA manifest
-- `service-worker.js` — offline caching
+- `src/App.tsx` — root with AppProvider + theme wrapper
+- `src/contexts/AppContext.tsx` — all state, CRUD, theme, import/export
+- `src/types/index.ts` — all types + sample data
+- `src/components/` — Layout, LibraryPage, GameCard, GameDetailPanel, AddGameModal, YouTubersPage, NewReleasesPage, SettingsPage
+- `src/index.css` — theme CSS vars (.theme-sleek / .theme-neon / .theme-retro)
+- `src/lib/utils.ts` — cn(), generateId(), YouTube/HLTB/Steam URL helpers
+- `vite.config.ts` — Vite + PWA config
 
 ## Architecture decisions
 
-- No bundler or build step; all dependencies loaded via CDN (React, Tailwind, Babel)
-- Data persisted entirely in localStorage — no backend required
-- PWA installable on mobile/desktop with offline support via service worker
-- RAWG API used for auto-filling game details from web search
+- Three dramatically different themes (sleek/neon/retro) driven by CSS custom properties on a `.theme-*` root class
+- All state in React context + useLocalStorage; no backend needed
+- GameDetailPanel is a slide-in drawer (fixed, right side) triggered by selectedGameId in context
+- Sample data seeded on first load if localStorage is empty
+- PWA manifest + vite-plugin-pwa for desktop/mobile install
 
 ## Product
 
-- Tier-based game list (S/A/B/C/Racing tiers)
-- Status tracking: Not Downloaded → Downloaded → Playing → Completed → Favorite
-- 1–5 star ratings, personal notes per game
-- Search & filter by name, genre, status
-- Dark/Light mode toggle
-- Export/Import JSON backup
-- RAWG API integration for auto-filling game details
-- PWA installable on phone/desktop, works offline
+- Tier-based game library (S/A/B/C/Racing), grouped by tier
+- Status cycling: Not Downloaded → Downloaded → Playing → Completed → Favorite
+- 1–5 star ratings, personal notes, playtime hours per game
+- Game detail slide-in panel: edit notes, rate, cycle status, quick links (YouTube, Gameranx, HLTB, Steam)
+- Search & filter by name and status
+- YouTubers section: add/delete creators with channel links
+- New Releases section with wishlist toggle
+- Settings page: theme switcher (Sleek Studio / Neon Command / Retro Arcade), RAWG API key, export/import JSON, reset
+- PWA — installable on desktop and mobile
 
 ## User preferences
 
-_Populate as you build_
+- Default theme: Sleek Dark Studio (amber/gold + deep charcoal)
+- Neon Command Center + Retro Arcade as alternate themes in Settings
 
 ## Gotchas
 
-- Service worker caches files aggressively; hard-refresh needed after updates in dev
-- RAWG API requires internet connection for game search feature
-- Assets directory (icons) must exist for PWA manifest not to 404
+- `animate-in slide-in-from-right` requires Tailwind animate plugin or inline transition — use CSS transform fallback if not working
+- Theme CSS vars defined in `src/index.css` on `.theme-sleek`, `.theme-neon`, `.theme-retro` classes
+- Vite HMR works; hard-refresh only needed after service worker updates
 
 ## Pointers
 
-- [RAWG API docs](https://rawg.io/apidocs)
-- [PWA manifest spec](https://developer.mozilla.org/en-US/docs/Web/Manifest)
+- [Vite docs](https://vitejs.dev)
+- [vite-plugin-pwa](https://vite-pwa-org.netlify.app)
+- [Tailwind CSS v4](https://tailwindcss.com/docs/v4-beta)

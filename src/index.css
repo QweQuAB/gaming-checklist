@@ -1,0 +1,135 @@
+@import "tailwindcss";
+
+@layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  html, body, #root {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: var(--font-body);
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.12);
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255,255,255,0.2);
+  }
+}
+
+/* Base Theme Configurations */
+:root {
+  --bg-color: #1a1a2e;
+  --text-color: #f1f5f9;
+  --font-heading: 'sans-serif';
+  --font-body: 'sans-serif';
+  --accent-color: #f59e0b;
+}
+
+/* Theme: Sleek */
+.theme-sleek {
+  --bg-color: #1a1a2e;
+  --text-color: #f1f5f9;
+  --text-muted: #94a3b8;
+  --font-heading: 'Playfair Display', serif;
+  --font-body: 'Plus Jakarta Sans', sans-serif;
+  --accent-color: #f59e0b;
+  --panel-bg: rgba(30, 30, 46, 0.4);
+  --panel-border: rgba(255, 255, 255, 0.05);
+  background-image: radial-gradient(circle at top right, rgba(245, 158, 11, 0.05), transparent 40%);
+}
+.theme-sleek .font-heading { font-family: var(--font-heading); }
+.theme-sleek .font-body { font-family: var(--font-body); }
+.theme-sleek .glass-panel {
+  background: var(--panel-bg);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--panel-border);
+  box-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.5);
+}
+
+/* Theme: Neon */
+.theme-neon {
+  --bg-color: #050508;
+  --text-color: #e2e8f0;
+  --text-muted: #64748b;
+  --font-heading: 'Orbitron', sans-serif;
+  --font-body: 'Space Mono', monospace;
+  --accent-color: #00ffff;
+  --accent-secondary: #a855f7;
+  --panel-bg: #0a0a12;
+  --panel-border: rgba(0, 255, 255, 0.2);
+}
+.theme-neon .font-heading { font-family: var(--font-heading); text-transform: uppercase; letter-spacing: 0.05em; }
+.theme-neon .font-body { font-family: var(--font-body); }
+.theme-neon .glass-panel {
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+}
+.theme-neon::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 255, 255, 0.02) 0px,
+    rgba(0, 255, 255, 0.02) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  z-index: 9999;
+}
+.theme-neon .neon-glow {
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.3), inset 0 0 10px rgba(0, 255, 255, 0.1);
+}
+
+/* Theme: Retro */
+.theme-retro {
+  --bg-color: #1a0b2e;
+  --text-color: #e0d8f0;
+  --text-muted: #a090c0;
+  --font-heading: 'Press Start 2P', cursive;
+  --font-body: 'Space Mono', monospace;
+  --accent-color: #ffaa00;
+  --panel-bg: #2a1b42;
+  --panel-border: #4a2b6a;
+}
+.theme-retro .font-heading { font-family: var(--font-heading); text-transform: uppercase; }
+.theme-retro .font-body { font-family: var(--font-body); }
+.theme-retro .glass-panel {
+  background: var(--panel-bg);
+  border: 3px solid var(--panel-border);
+  box-shadow: inset -3px -3px 0px rgba(0,0,0,0.3), inset 3px 3px 0px rgba(255,255,255,0.1);
+}
+.theme-retro::before {
+  content: " ";
+  display: block;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+  z-index: 9999;
+  background-size: 100% 4px, 6px 100%;
+  pointer-events: none;
+}
