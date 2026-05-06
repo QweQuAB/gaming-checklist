@@ -1,0 +1,183 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&family=Space+Grotesk:wght@400;600;700&display=swap');
+
+.retro-arcade-theme {
+  --bg-color: #1a0b2e; /* Deep purple */
+  --surface-color: #2a1b42;
+  --surface-border: #4a2b6a;
+  --text-primary: #e0d8f0;
+  --text-secondary: #a090c0;
+  --accent-primary: #ffaa00; /* Warm orange */
+  --accent-secondary: #ff0055; /* Arcade pink/red */
+  --accent-tertiary: #00ffcc; /* Arcade cyan */
+  
+  --tier-s: #ff0055;
+  --tier-a: #ffaa00;
+  --tier-b: #ffee00;
+  --tier-c: #00ffcc;
+  --tier-r: #0055ff;
+
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  font-family: 'Space Grotesk', sans-serif;
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+.retro-arcade-theme::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  opacity: 0.03;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Pixel Font for headings and special elements */
+.font-pixel {
+  font-family: 'Press Start 2P', cursive;
+  letter-spacing: -1px;
+}
+
+.font-terminal {
+  font-family: 'VT323', monospace;
+}
+
+/* Custom Scrollbar */
+.retro-arcade-theme ::-webkit-scrollbar {
+  width: 10px;
+}
+.retro-arcade-theme ::-webkit-scrollbar-track {
+  background: var(--surface-color);
+  border-left: 2px solid var(--surface-border);
+}
+.retro-arcade-theme ::-webkit-scrollbar-thumb {
+  background: var(--accent-primary);
+  border: 2px solid var(--surface-color);
+}
+.retro-arcade-theme ::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-secondary);
+}
+
+/* Pixel Borders */
+.pixel-border {
+  border: 4px solid var(--surface-border);
+  box-shadow: 
+    -4px 0 0 var(--surface-border),
+    4px 0 0 var(--surface-border),
+    0 -4px 0 var(--surface-border),
+    0 4px 0 var(--surface-border);
+  border-radius: 2px;
+}
+
+.pixel-border-accent {
+  border: 4px solid var(--accent-primary);
+  box-shadow: 
+    -4px 0 0 var(--accent-primary),
+    4px 0 0 var(--accent-primary),
+    0 -4px 0 var(--accent-primary),
+    0 4px 0 var(--accent-primary),
+    0 0 15px rgba(255, 170, 0, 0.4);
+}
+
+/* Neon Text Glow */
+.neon-text-orange {
+  color: var(--accent-primary);
+  text-shadow: 0 0 5px rgba(255, 170, 0, 0.5), 0 0 10px rgba(255, 170, 0, 0.3);
+}
+
+.neon-text-pink {
+  color: var(--accent-secondary);
+  text-shadow: 0 0 5px rgba(255, 0, 85, 0.5), 0 0 10px rgba(255, 0, 85, 0.3);
+}
+
+.neon-text-cyan {
+  color: var(--accent-tertiary);
+  text-shadow: 0 0 5px rgba(0, 255, 204, 0.5), 0 0 10px rgba(0, 255, 204, 0.3);
+}
+
+/* CRT Scanline effect */
+.crt-scanlines {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(255,255,255,0),
+    rgba(255,255,255,0) 50%,
+    rgba(0,0,0,0.1) 50%,
+    rgba(0,0,0,0.1)
+  );
+  background-size: 100% 4px;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.tier-badge-S { background-color: var(--tier-s); color: #fff; text-shadow: 1px 1px 0 #000; }
+.tier-badge-A { background-color: var(--tier-a); color: #000; }
+.tier-badge-B { background-color: var(--tier-b); color: #000; }
+.tier-badge-C { background-color: var(--tier-c); color: #000; }
+.tier-badge-R { background-color: var(--tier-r); color: #fff; }
+
+.status-pill {
+  position: relative;
+  display: inline-block;
+  padding: 4px 12px;
+  border: 2px solid currentColor;
+  text-transform: uppercase;
+  font-family: 'VT323', monospace;
+  font-size: 1.1rem;
+  font-weight: bold;
+  box-shadow: 2px 2px 0 currentColor;
+  transition: all 0.1s ease;
+}
+
+.status-pill:active {
+  box-shadow: 0 0 0 currentColor;
+  transform: translate(2px, 2px);
+}
+
+/* Health Bar (Progress) */
+.health-bar-container {
+  border: 2px solid var(--text-secondary);
+  background: #000;
+  height: 12px;
+  padding: 1px;
+}
+.health-bar-fill {
+  height: 100%;
+  background: var(--accent-tertiary);
+  box-shadow: inset 0 -3px 0 rgba(0,0,0,0.3);
+}
+
+/* Menu Hover */
+.arcade-menu-item {
+  position: relative;
+  transition: all 0.2s ease;
+}
+.arcade-menu-item:hover {
+  background: var(--surface-border);
+  color: var(--accent-primary);
+  padding-left: 20px;
+}
+.arcade-menu-item:hover::before {
+  content: "►";
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.6rem;
+  color: var(--accent-primary);
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.glass-panel {
+  background: rgba(42, 27, 66, 0.85);
+  backdrop-filter: blur(8px);
+}
